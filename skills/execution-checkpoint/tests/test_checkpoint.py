@@ -34,13 +34,13 @@ class CheckpointTests(unittest.TestCase):
         self.command("init", "--plan", "docs/plans/test.md", "--run", "feature")
 
     def state(self):
-        return json.loads((self.repo / ".pstack/executions/feature/state.json").read_text())
+        return json.loads((self.repo / "docs/executions/feature/state.json").read_text())
 
     def test_initialize_and_refuse_overwrite(self):
         self.initialize()
         self.assertEqual(len(self.state()["tasks"]), 2)
         self.assertEqual(len(self.state()["tasks"][0]["steps"]), 2)
-        self.assertTrue((self.repo / ".pstack/executions/feature/summary.md").exists())
+        self.assertTrue((self.repo / "docs/executions/feature/summary.md").exists())
         self.command("init", "--plan", "docs/plans/test.md", "--run", "feature", expected=2)
 
     def test_completion_requires_evidence_and_all_steps(self):
@@ -94,6 +94,39 @@ class CheckpointTests(unittest.TestCase):
         self.assertEqual(len(data["hooks"]["sessionStart"]), 1)
         self.assertEqual(len(data["hooks"]["postToolUse"]), 1)
         self.assertIn("additional_context", self.command("hook", "--event", "sessionStart"))
+
+    def test_resume_legacy_and_migrate_preserves_progress(self):
+        self.initialize()
+        self.command("note", "--run", "feature", "--summary", "halfway done", "--next", "verify T2")
+        new = self.repo / "docs/executions/feature"
+        old = self.repo / ".pstack/executions/feature"
+        old.parent.mkdir(parents=True)
+        new.rename(old)
+        self.assertIn("halfway done", self.command("resume", "--run", "feature"))
+        self.command("migrate", "--run", "feature")
+        self.assertTrue(new.joinpath("state.json").is_file())
+        self.assertFalse(old.exists())
+        self.assertEqual(self.state()["summary"], "halfway done")
+        self.assertIn("State: docs/executions/feature", self.command("status", "--run", "feature"))
+
+    def test_duplicate_legacy_and_docs_fails_closed(self):
+        import shutil
+        self.initialize()
+        source = self.repo / "docs/executions/feature"
+        legacy = self.repo / ".pstack/executions/feature"
+        shutil.copytree(source, legacy)
+        self.command("resume", "--run", "feature", expected=2)
+        self.command("init", "--plan", "docs/plans/test.md", "--run", "feature", expected=2)
+        self.command("migrate", "--run", "feature", expected=2)
+
+    def test_init_refuses_legacy_overwrite(self):
+        self.initialize()
+        source = self.repo / "docs/executions/feature"
+        legacy = self.repo / ".pstack/executions/feature"
+        legacy.parent.mkdir(parents=True)
+        source.rename(legacy)
+        self.command("init", "--plan", "docs/plans/test.md", "--run", "feature", expected=2)
+        self.assertTrue(legacy.joinpath("state.json").exists())
 
     def test_containment(self):
         self.command("init", "--plan", "../outside.md", "--run", "feature", expected=2)
