@@ -18,27 +18,42 @@ not modified; the layer is additive, so `git merge upstream/main` stays clean.
 | `examples/commands/plan-review.md` | `/plan-review` command to run the same interview manually, e.g. from the built-in `plan` agent. |
 | `examples/pstack-models.md` | Example per-role model mapping (OpenAI + Alibaba Token Plan). |
 | `examples/opencode.jsonc` | Example workspace config: disable the Superpowers plugin locally and gate risky commands. |
+| `examples/opencode.global.json` | Plugins the workflow expects globally; `install.sh` merges them. |
+| `examples/rtk/` | RTK OpenCode plugin and rules. |
+| `install.sh` | One-command install of everything above. |
 
 pstack itself stays a prerequisite, installed separately. This repo does not vendor a
 second copy of upstream skills beyond the method skills above.
 
+## Prerequisites
+
+- OpenCode 2, Node.js with `npx`, and `python3`.
+- Optional: the [`rtk`](https://github.com/rtk-ai/rtk) binary for terminal output
+  compression, and the Orca app for `orchestration` / `orca-cli` delegation (Orca ships
+  those skills itself).
+- Provider accounts and MCP servers are personal; configure them separately.
+
 ## Install
 
 ```sh
-# 1. Skills (upstream pstack + the method skills) and the grilling interview method
-npx skills add aditya11201/pstack
-npx skills add mattpocock/skills --skill grilling -g
-
-# 2. Agent (one-time)
-mkdir -p ~/.config/opencode/agents
-cp agents/pstack-engineer.md ~/.config/opencode/agents/
-
-# 3. Optional: model mapping and workspace config
-cp examples/pstack-models.md ~/.agents/pstack-models.md   # edit to your providers
-# Merge examples/opencode.jsonc into your project's opencode.jsonc
-mkdir -p ~/.config/opencode/commands
-cp examples/commands/plan-review.md ~/.config/opencode/commands/
+git clone https://github.com/aditya11201/pstack && cd pstack
+./install.sh            # or ./install.sh --no-rtk
 ```
+
+The script is safe to rerun. It installs, for the current user:
+
+| What | Where |
+|---|---|
+| pstack, method, spec/plan, and `plan-gap-interview` skills from this repo | `~/.agents/skills/` |
+| `grilling` from mattpocock/skills | `~/.agents/skills/` |
+| `pstack-engineer` agent, `/plan-review` command | `~/.config/opencode/agents/`, `commands/` |
+| Model mapping (only when none exists) | `~/.agents/pstack-models.md` |
+| Plugins `superpowers`, `cc-safety-net`, `ponytail`, merged without touching other settings or replacing a version you already pin | `~/.config/opencode/opencode.json` |
+| RTK plugin and rules, with `@RTK.md` added to `~/.claude/CLAUDE.md` | `~/.config/opencode/plugins/rtk.ts`, `~/.claude/RTK.md` |
+
+Per project, merge `examples/opencode.jsonc` into the project's `opencode.jsonc`. It
+disables the global Superpowers plugin there, so this repo's method skills are the only
+copy, and makes commit, push, PR, and deploy commands ask first.
 
 Select the `pstack-engineer` agent in OpenCode, choose a parent model in `/models`,
 then give a goal, scope, and pass criteria. Use the built-in `plan` agent for read-only
