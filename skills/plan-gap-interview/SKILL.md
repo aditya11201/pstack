@@ -5,13 +5,13 @@ description: Use right after an implementation plan is written, when asked to re
 
 # Plan gap interview
 
-Keep the spec and the plan aligned with what the user confirmed. The requirements interview happens earlier, in `brainstorming`; this skill only asks about decisions that the spec has not settled.
+Keep the spec and the plan aligned with what the user confirmed. The requirements interview happens earlier, in `spec-first`; this skill only asks about decisions that the spec has not settled.
 
 Load the `grilling` skill with the skill tool now if it is not loaded yet. It is the interview method. This skill decides what to ask and when to stop.
 
 ## Modes
 
-- **Plan mode**: a plan was just written (by `writing-plans` or a pstack playbook), or the user asks to review a plan.
+- **Plan mode**: a plan was just written (by `plan-from-spec` or a pstack playbook), or the user asks to review a plan.
 - **Change mode**: after the spec was approved, the user adds a requirement, a task, or a scope change. This includes during plan review and during implementation.
 
 A permission grant or revocation is not a change. Examples: "just commit, don't ask", "you may start the instance with gcloud", "stop pushing". Do not use this skill for it. Follow the agent's authorization contract instead:
@@ -78,7 +78,7 @@ Then stop and ask for approval of the summary only, for example "Setujui ringkas
 2. Update the plan so every task still traces to the spec.
 3. Report both paths and what changed, then end your turn.
 
-Approval of the summary approves the spec and plan edits only. It is never an instruction to implement. Do not load `test-driven-development`, edit code, or run a mutating command in the same turn.
+Approval of the summary approves the spec and plan edits only. It is never an instruction to implement. Do not load `test-first`, edit code, or run a mutating command in the same turn.
 
 - **Plan mode:** close with exactly this, in the user's language: "Plan siap di `<plan path>`. Ketik perintah implementasi kalau mau mulai." Never write "after approval, implementation starts" or anything like it.
 - **Change mode:** if the user had already told you to implement before the new item arrived, resume implementation from the first task the change touches. Otherwise close the same way as plan mode.

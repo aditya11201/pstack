@@ -4,14 +4,9 @@ This repository is a fork of [backnotprop/pstack](https://github.com/backnotprop
 itself a mirror of [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/main/pstack).
 Upstream pstack is licensed under the MIT License (see `LICENSE`).
 
-The following skills in `skills/` are copied from
-[obra/superpowers](https://github.com/obra/superpowers) and are used under the MIT License:
-
-- `systematic-debugging`
-- `test-driven-development`
-- `verification-before-completion`
-- `brainstorming` (modified: specs go to `docs/specs/`, no automatic commit, changes log)
-- `writing-plans` (modified: plans go to `docs/plans/`, gap-check handoff replaces execution handoff)
+The method skills `spec-first`, `plan-from-spec`, `root-cause`, `test-first`, and
+`evidence-before-done` are written for this fork. Their method ideas are inspired by
+[obra/superpowers](https://github.com/obra/superpowers) (MIT).
 
 `skills/plan-gap-interview` is original to this fork but adapts the Self-Review checklist of
 `writing-plans` from obra/superpowers and the ambiguity challenge and ADR criteria of

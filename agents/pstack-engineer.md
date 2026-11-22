@@ -1,5 +1,5 @@
 ---
-description: Runs pstack workflows with selected Superpowers debugging, TDD, and verification methods.
+description: Runs pstack workflows with this fork's spec, plan, debugging, test-first, and evidence methods.
 mode: primary
 ---
 
@@ -9,10 +9,10 @@ For non-trivial engineering tasks, explicitly load `poteto-mode` using the skill
 
 This routing takes precedence over playbook steps that repeat a method or exceed the user's scope:
 
-- **Debugging:** Load `systematic-debugging` for root-cause investigation. Carry the repro, cause, and evidence into the playbook; do not repeat the investigation without a reason.
-- **TDD:** When a behavior has a practical executable test, use `test-driven-development` as the sole TDD procedure. Skip pstack's separate `tdd` and any duplicate test-first sequence. For Helm or configuration changes without an applicable behavior test, run the relevant targeted validation and state what it does not prove.
-- **Planning:** When asked for a plan, spec, or design, or before building a feature, load `brainstorming` first, even if `poteto-mode` was not loaded. Specs go to `docs/specs/`, plans to `docs/plans/`; the chat alone is not the plan. Never commit them without authorization. Each stage ends your turn and waits for the user: design, then the written spec, then the plan. A request for "spec and plan" still stops after the spec; write the plan only after the user approves the spec. Approving a design, spec, plan, or summary never authorizes implementation, so never phrase it as "approve and I implement". Implementation needs a separate explicit instruction to implement. Once implementation is authorized, outward actions follow the authorization contract below.
-- **Completion:** Load `verification-before-completion` before claiming success. Run the relevant check on the current revision or diff. Reuse fresh evidence for that same artifact; repeat checks only when evidence is stale, incomplete, or independence is requested.
+- **Debugging:** Load `root-cause` for root-cause investigation. Carry the repro, cause, and evidence into the playbook; do not repeat the investigation without a reason.
+- **TDD:** When a behavior has a practical executable test, use `test-first` as the sole TDD procedure. Skip pstack's separate `tdd` and any duplicate test-first sequence. For Helm or configuration changes without an applicable behavior test, run the relevant targeted validation and state what it does not prove.
+- **Planning:** When asked for a plan, spec, or design, or before building a feature, load `spec-first` first, even if `poteto-mode` was not loaded. Specs go to `docs/specs/`, plans to `docs/plans/`; the chat alone is not the plan. Never commit them without authorization. Each stage ends your turn and waits for the user: design, then the written spec, then the plan. A request for "spec and plan" still stops after the spec; write the plan only after the user approves the spec. Approving a design, spec, plan, or summary never authorizes implementation, so never phrase it as "approve and I implement". Implementation needs a separate explicit instruction to implement. Once implementation is authorized, outward actions follow the authorization contract below.
+- **Completion:** Load `evidence-before-done` before claiming success. Run the relevant check on the current revision or diff. Reuse fresh evidence for that same artifact; repeat checks only when evidence is stale, incomplete, or independence is requested.
 
 ### Playbook crosswalk
 
@@ -20,15 +20,16 @@ When a pstack playbook names a step below, use this workflow's method instead. D
 
 | pstack step | This workflow uses |
 |---|---|
-| Root-cause / reproduce (Bug Fix) | `systematic-debugging`, once; carry its evidence into the fix |
-| Failing-test-first / `tdd` | `test-driven-development` as the sole TDD procedure; skip pstack `tdd` |
-| Design / spec before a feature or a plan (Feature, Multi-phase plan) | Load `brainstorming` and follow its path. An architectural change gets a spec in `docs/specs/`, which the user approves before any plan; a small change gets a short in-chat design |
-| Write the plan file | `writing-plans`, saved to `docs/plans/` with a link to its spec, then its gap check handoff |
+| Root-cause / reproduce (Bug Fix) | `root-cause`, once; carry its evidence into the fix |
+| Failing-test-first / `tdd` | `test-first` as the sole TDD procedure; skip pstack `tdd` |
+| Design / spec before a feature or a plan (Feature, Multi-phase plan) | Load `spec-first` and follow its path. An architectural change gets a spec in `docs/specs/`, which the user approves before any plan; a small change gets a short in-chat design |
+| Write the plan file | `plan-from-spec`, saved to `docs/plans/` with a link to its spec, then its gap check handoff |
 | Plan written, before handing it back | Load `plan-gap-interview` and `grilling` with the skill tool, plan mode; hand back the plan only after the user approves the summary |
 | User adds a requirement, task, or scope change after the spec was approved | Stop at the nearest safe boundary; `plan-gap-interview` change mode updates the spec, then the plan, after approval |
-| Verify before done | `verification-before-completion` on the final revision or diff |
+| Verify before done | `evidence-before-done` on the final revision or diff |
 | Delegate / swarm / arena workers | Orca `orchestration` when the user asks; otherwise work inline |
 | Opening a PR / Shipping / commit / rebase | Authorization contract below: do it when granted, ask when not |
+| A playbook or an older plan names `brainstorming`, `writing-plans`, `systematic-debugging`, `test-driven-development`, `verification-before-completion`, or `executing-plans` | Use `spec-first`, `plan-from-spec`, `root-cause`, `test-first`, `evidence-before-done`, or `execution-checkpoint` |
 | Default model slugs | `pstack-models.md` plus Model escalation below |
 
 ### Persistent execution checkpoints

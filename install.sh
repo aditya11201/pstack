@@ -4,6 +4,9 @@
 #
 #   ./install.sh            # everything
 #   ./install.sh --no-rtk   # skip the RTK plugin and rules
+#   ./install.sh --remove-old-skills
+#                           # also remove skill copies this repo installed under
+#                           # their old names (they are listed on every run)
 #
 # Prerequisites: node/npx, python3, opencode. Optional: rtk binary, Orca app.
 set -eu
@@ -11,7 +14,14 @@ set -eu
 REPO=$(cd "$(dirname "$0")" && pwd)
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
 WITH_RTK=1
-[ "${1:-}" = "--no-rtk" ] && WITH_RTK=0
+REMOVE_OLD=0
+for arg in "$@"; do
+  case "$arg" in
+    --no-rtk) WITH_RTK=0 ;;
+    --remove-old-skills) REMOVE_OLD=1 ;;
+    *) echo "unknown option: $arg" >&2; exit 2 ;;
+  esac
+done
 
 step() { printf '\n==> %s\n' "$1"; }
 
@@ -59,10 +69,50 @@ plugins = data.get("plugins", [])
 name = lambda spec: spec.split("@git+")[0] if "@git+" in spec else spec.rsplit("@", 1)[0] if spec.rfind("@") > 0 else spec
 have = {name(p) for p in plugins if isinstance(p, str)}
 added = [p for p in wanted if name(p) not in have]
-data["plugins"] = plugins + added
+dropped = [p for p in plugins if isinstance(p, str) and name(p) == "superpowers"]
+for p in dropped:
+    print("removed plugin:", p)
+data["plugins"] = [p for p in plugins if p not in dropped] + added
 target.write_text(json.dumps(data, indent=2) + "\n")
 print("added:", added or "nothing, all present")
 PY
+
+step "Old method skill names"
+OLD_SKILLS=$(python3 - "$HOME/.agents/.skill-lock.json" "$REPO" <<'PY'
+import json, sys
+from pathlib import Path
+lock, repo = Path(sys.argv[1]), sys.argv[2]
+skills = json.loads(lock.read_text()).get("skills", {}) if lock.exists() else {}
+for old in ["brainstorming", "writing-plans", "systematic-debugging",
+            "test-driven-development", "verification-before-completion"]:
+    entry = skills.get(old)
+    if not entry:
+        continue
+    if entry.get("source") == repo:
+        print(old)
+    else:
+        print("kept %s: installed from %s" % (old, entry.get("source")), file=sys.stderr)
+PY
+)
+if [ -z "$OLD_SKILLS" ]; then
+  echo "none from this repo"
+else
+  for s in $OLD_SKILLS; do echo "old skill from this repo: $s"; done
+  if [ "$REMOVE_OLD" = 1 ]; then
+    for s in $OLD_SKILLS; do
+      # No -a: ~/.agents/skills is shared by several agents, and removing only the
+      # opencode link leaves the folder in place.
+      npx -y skills remove "$s" -g -y >/dev/null
+      if [ -e "$HOME/.agents/skills/$s" ]; then
+        echo "warning: $s still present in ~/.agents/skills; remove it by hand"
+      else
+        echo "removed old skill: $s"
+      fi
+    done
+  else
+    echo "kept; rerun with --remove-old-skills to remove them"
+  fi
+fi
 
 if [ "$WITH_RTK" = 1 ]; then
   step "RTK plugin and rules"
@@ -77,7 +127,7 @@ fi
 step "Done"
 cat <<'EOF'
 Per project: merge examples/opencode.jsonc into the project's opencode.jsonc
-(disables the global Superpowers plugin there so this repo's method skills are the
-only copy, and gates commit/push/deploy commands).
+(disables the Superpowers plugin there in case it is still installed, and gates
+commit/push/deploy commands).
 Then pick the pstack-engineer agent in OpenCode and a parent model in /models.
 EOF

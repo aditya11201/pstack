@@ -6,6 +6,7 @@ on:
       - "skills/execution-checkpoint/**"
       - ".github/workflows/checkpoint-tests.yml"
       - "install.sh"
+      - "tests/**"
       - "examples/opencode2/**"
   workflow_dispatch:
 
@@ -38,3 +39,15 @@ jobs:
           node-version: "22"
       - name: Verify V2 plugin lifecycle and isolation
         run: node --test examples/opencode2/pstack-execution-checkpoint.test.mjs
+
+  install-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: install.sh removes the Superpowers plugin and old skill copies
+        run: sh tests/install-migration.sh "$PWD"
