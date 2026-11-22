@@ -14,7 +14,7 @@ not modified; the layer is additive, so `git merge upstream/main` stays clean.
 | `skills/verification-before-completion/` | Fresh evidence on the final diff before claiming success (from Superpowers, MIT). |
 | `skills/brainstorming/` | Interview and design first; an architectural change gets a spec in `docs/specs/` that the user approves (from Superpowers, MIT, modified). |
 | `skills/writing-plans/` | Writes the plan to `docs/plans/`, linked to its spec (from Superpowers, MIT, modified). |
-| `skills/execution-checkpoint/` | Persistent execution status, evidence, decisions, blockers, summary, and resume points in the **working repo** under `.pstack/executions/<run-id>/`. |\n| `skills/plan-gap-interview/` | Plan mode checks a plan against its approved spec; change mode folds a requirement added later into the spec and plan. Asks one question at a time about new decisions only, then waits for approval. Uses `grilling` from mattpocock/skills. |
+| `skills/execution-checkpoint/` | Persistent execution status, evidence, decisions, blockers, summary, and resume points in the **working repo** under `docs/executions/<run-id>/`. |\n| `skills/plan-gap-interview/` | Plan mode checks a plan against its approved spec; change mode folds a requirement added later into the spec and plan. Asks one question at a time about new decisions only, then waits for approval. Uses `grilling` from mattpocock/skills. |
 | `examples/commands/plan-review.md` | `/plan-review` command to run the same interview manually, e.g. from the built-in `plan` agent. |
 | `examples/pstack-models.md` | Example per-role model mapping (OpenAI + Alibaba Token Plan). |
 | `examples/opencode.jsonc` | Example workspace config: disable the Superpowers plugin locally and gate risky commands. |
@@ -86,6 +86,10 @@ Use `execution-checkpoint` for multi-step plans once implementation is explicitl
 After a context reset, run `python3 <installed-skill>/scripts/checkpoint.py resume --repo . --run <id>` **before** implementing. The CLI reports plan hash drift, tasks still open, blockers, decisions, HEAD, and working diff. Verify results using actual tests/Git before trusting completion claims. The checkpoint is not a substitute for approvals or the `verification-before-completion` skill.
 
 OpenCode uses the agent instructions, not Cursor hooks. Cursor's optional hook setup is documented in [execution-checkpoint.md](execution-checkpoint.md), with the limitation that `sessionStart` fires for a newly created conversation, not guaranteed at in-place compaction.
+
+## Checkpoint location: docs/
+
+Execution state now lives in `docs/executions/<run-id>/` alongside implementation plans in `docs/plans/`. The OpenCode 2 context and compaction hooks read the new path. For any previous run still under `.pstack/executions/<run-id>/`, invoke `python3 <installed-skill>/scripts/checkpoint.py migrate --repo . --run <id>` to move it without resetting progress. Until migration, the legacy path remains readable, but duplicate run IDs in both roots are refused.
 
 ## OpenCode 2 native checkpoint recovery
 

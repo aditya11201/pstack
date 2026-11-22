@@ -8,7 +8,7 @@ import plugin, { readCheckpoint, checkpointContext } from "./pstack-execution-ch
 async function fixture(t, id = "feature") {
   const root = await mkdtemp(join(tmpdir(), "pstack-oc2-"))
   t.after(() => rm(root, { recursive: true, force: true }))
-  const path = join(root, ".pstack", "executions", id)
+  const path = join(root, "docs", "executions", id)
   await mkdir(path, { recursive: true })
   const state = {
     version: 1, run_id: id, plan: { path: "docs/plans/auth.md" },
@@ -34,10 +34,23 @@ test("loads active run and summarizes current progress", async (t) => {
 
 test("fails closed on ambiguous runs instead of choosing the newest", async (t) => {
   const { root } = await fixture(t)
-  await mkdir(join(root, ".pstack/executions/another"), { recursive: true })
-  await writeFile(join(root, ".pstack/executions/another/state.json"), "{}")
+  await mkdir(join(root, "docs/executions/another"), { recursive: true })
+  await writeFile(join(root, "docs/executions/another/state.json"), "{}")
   assert.equal(await readCheckpoint(root, ""), null)
   assert.equal((await readCheckpoint(root, "feature")).run, "feature")
+})
+
+test("reads legacy state before migration and rejects duplicate run IDs", async (t) => {
+  const { root, path } = await fixture(t)
+  const oldParent = join(root, ".pstack", "executions")
+  await mkdir(oldParent, { recursive: true })
+  const oldPath = join(oldParent, "feature")
+  const { rename, cp } = await import("node:fs/promises")
+  await rename(path, oldPath)
+  const legacy = await readCheckpoint(root, "feature")
+  assert.equal(legacy.relative, ".pstack/executions/feature")
+  await cp(oldPath, path, { recursive: true })
+  assert.equal(await readCheckpoint(root, "feature"), null)
 })
 
 test("does not follow symlinked state outside the project", async (t) => {

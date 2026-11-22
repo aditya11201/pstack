@@ -24,26 +24,47 @@ export async function readCheckpoint(directory, pin = process.env.PSTACK_RUN_ID)
   if (!directory || typeof directory !== "string") return null
   try {
     const root = await realpath(directory)
-    const runs = await realpath(join(root, ".pstack", "executions"))
-    if (!contained(root, runs) || runs === root) return null
+    // Prefer documentation-local runs. Legacy state is read-only until moved
+    // with checkpoint.py migrate; two copies of an ID are ambiguous.
+    const parents = []
+    for (const relative of ["docs/executions", ".pstack/executions"]) {
+      try {
+        const candidate = join(root, relative)
+        if (!(await lstat(candidate)).isDirectory()) continue
+        const resolved = await realpath(candidate)
+        if (!contained(root, resolved) || resolved === root) return null
+        parents.push({ relative, path: resolved })
+      } catch (error) {
+        if (error?.code !== "ENOENT") return null
+      }
+    }
     let id = pin || ""
     if (id && !ID.test(id)) return null
-    if (!id) {
-      const matches = []
-      for (const entry of await readdir(runs, { withFileTypes: true })) {
+    const found = new Map()
+    for (const parent of parents) {
+      for (const entry of await readdir(parent.path, { withFileTypes: true })) {
         if (!entry.isDirectory() || !ID.test(entry.name)) continue
-        const statePath = join(runs, entry.name, "state.json")
+        const location = join(parent.path, entry.name)
         try {
-          if ((await lstat(statePath)).isFile()) matches.push(entry.name)
-        } catch {
-          // Ignore incomplete run directories.
+          const stateFile = join(location, "state.json")
+          if (!(await lstat(stateFile)).isFile()) continue
+          const folder = await realpath(location)
+          if (!contained(parent.path, folder) || folder === parent.path) return null
+          const candidates = found.get(entry.name) || []
+          candidates.push({ folder, relative: parent.relative })
+          found.set(entry.name, candidates)
+        } catch (error) {
+          if (error?.code !== "ENOENT") return null
         }
       }
-      if (matches.length !== 1) return null
-      id = matches[0]
     }
-    const folder = await realpath(join(runs, id))
-    if (!contained(runs, folder) || folder === runs) return null
+    if (!id) {
+      if (found.size !== 1) return null
+      id = found.keys().next().value
+    }
+    const candidates = found.get(id) || []
+    if (candidates.length !== 1) return null
+    const { folder, relative } = candidates[0]
     const filename = join(folder, "state.json")
     const st = await lstat(filename)
     if (!st.isFile() || st.size > MAX_BYTES) return null
@@ -54,7 +75,7 @@ export async function readCheckpoint(directory, pin = process.env.PSTACK_RUN_ID)
     const blockers = data.blockers.filter((b) => b.status === "open")
     return {
       run: id,
-      relative: ".pstack/executions/" + id,
+      relative: relative + "/" + id,
       plan: clipped(data.plan?.path, 200),
       completed: tasks.filter((t) => t.status === "complete").length,
       total: tasks.length,

@@ -11,7 +11,7 @@ Record execution state for an approved plan in the working repository, so work c
 CHECKPOINT="$HOME/.agents/skills/execution-checkpoint/scripts/checkpoint.py"
 ```
 
-Run it from the **repository being modified** with `--repo .`, never from the pstack checkout. It writes `.pstack/executions/<run-id>/`. `state.json` is canonical; `summary.md`, `progress.md`, and `blockers.md` are regenerated views. Do not edit any of them by hand.
+Run it from the **repository being modified** with `--repo .`, never from the pstack checkout. It writes `docs/executions/<run-id>/`. `state.json` is canonical; `summary.md`, `progress.md`, and `blockers.md` are regenerated views. Do not edit any of them by hand.
 
 ## Authorization and ownership
 
@@ -24,6 +24,16 @@ Run it from the **repository being modified** with `--repo .`, never from the ps
 
 1. Check for an existing run: `python3 "$CHECKPOINT" status --repo .` (add `--run <id>` if you know it). `checkpoint: invalid run ID` without `--run` means no single run exists (none, or several). Reuse a run; `init` refuses to overwrite one.
 2. If none exists: `python3 "$CHECKPOINT" init --repo . --plan docs/plans/<plan>.md --run <id>`. It parses `### Task N:` / `### Phase N:` headings into `T1, T2, …` and their checkboxes into `S1, S2, …`. Boxes already checked in the plan do not count as done.
+
+## Existing checkpoints created before this version
+
+Older runs at `.pstack/executions/<run-id>/` remain readable to avoid losing recorded progress. To relocate one without reinitializing it, run:
+
+```bash
+python3 "$CHECKPOINT" migrate --repo . --run <id>
+```
+
+Migration moves the existing checkpoint directory to `docs/executions/<run-id>/` and refuses to overwrite an existing target. Do not copy the two directories manually: duplicate run IDs cause resume to fail closed until reconciled.
 
 ## Checkpoint at every boundary
 

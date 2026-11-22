@@ -33,7 +33,7 @@ When a pstack playbook names a step below, use this workflow's method instead. D
 
 ### Persistent execution checkpoints
 
-For an explicitly approved multi-step implementation plan, load `execution-checkpoint` before editing any code. Initialize a run only if it does not already exist, in the **working repository** (not in this plugin source). The approved plan remains in `docs/plans/`; the execution state is kept under `.pstack/executions/<run-id>/` in that project's repository. Use one stable run ID, shared with the coordinator. No checkpoint is needed for a simple, one-off edit.
+For an explicitly approved multi-step implementation plan, load `execution-checkpoint` before editing any code. Initialize a run only if it does not already exist, in the **working repository** (not in this plugin source). The approved plan remains in `docs/plans/`; the execution state is kept under `docs/executions/<run-id>/` in that project's repository. Use one stable run ID, shared with the coordinator. No checkpoint is needed for a simple, one-off edit.
 
 At every verified step/task boundary, record the actual tests, evidence, blockers, decisions, summary, and single next action with the skill's `checkpoint.py` CLI. A claimed PASS without executed evidence is not completion. When the session has compacted or restarted, call `resume` first, compare the stored state with the approved plan and actual Git changes, and only then continue from the first unverified task. Do not assume Cursor hooks are a guaranteed in-place compaction signal. When several runs exist, pin `--run` or `PSTACK_RUN_ID` explicitly rather than choosing a recent run. Only one coordinator writes to one run; delegate workers report evidence rather than editing the shared state.
 

@@ -33,18 +33,59 @@ def inside(root, name):
     require(p.is_relative_to(root), "path escapes repository")
     return p
 
+# Keep legacy checkpoints readable until explicitly migrated to docs/.
+NEW_ROOT = "docs/executions"
+OLD_ROOT = ".pstack/executions"
+
+def runs_in(root, parent_name):
+    parent = inside(root, parent_name)
+    if not parent.exists():
+        return {}
+    require(parent.is_dir() and not parent.is_symlink(), "invalid checkpoint root")
+    return {
+        p.name: p for p in parent.iterdir()
+        if p.is_dir() and not p.is_symlink() and SLUG.fullmatch(p.name)
+        and (p / "state.json").is_file() and not (p / "state.json").is_symlink()
+    }
+
 def run_folder(root, name=None, create=False):
     name = name or os.environ.get("PSTACK_RUN_ID", "")
-    parent = inside(root, ".pstack/executions")
-    if not name and parent.exists():
-        found = [p.name for p in parent.iterdir() if p.is_dir() and not p.is_symlink() and SLUG.fullmatch(p.name) and (p / "state.json").is_file()]
+    fresh, legacy = runs_in(root, NEW_ROOT), runs_in(root, OLD_ROOT)
+    if not name:
+        found = set(fresh) | set(legacy)
         require(len(found) == 1, "missing or ambiguous run: specify --run")
-        name = found[0]
+        name = next(iter(found))
     require(bool(SLUG.fullmatch(name)), "invalid run ID")
-    p = inside(root, ".pstack/executions/" + name)
-    if not create:
-        require((p / "state.json").is_file(), "run does not exist")
-    return p
+    require(not (name in fresh and name in legacy), "duplicate run in docs and legacy: reconcile before continuing")
+    if create:
+        require(name not in legacy, "legacy run exists; migrate it instead of resetting progress")
+        return inside(root, NEW_ROOT + "/" + name)
+    folder = fresh.get(name) or legacy.get(name)
+    require(folder is not None, "run does not exist")
+    return inside(root, str(folder.relative_to(root)))
+
+def migrate(args):
+    root = root_path(args.repo)
+    name = args.run or os.environ.get("PSTACK_RUN_ID", "")
+    require(bool(SLUG.fullmatch(name)), "specify --run with a valid run ID for migration")
+    legacy = inside(root, OLD_ROOT + "/" + name)
+    target = inside(root, NEW_ROOT + "/" + name)
+    require(legacy.is_dir() and not legacy.is_symlink(), "legacy checkpoint not found")
+    require((legacy / "state.json").is_file() and not (legacy / "state.json").is_symlink(), "legacy state unavailable")
+    require(not target.exists() and not target.is_symlink(), "destination already exists; refusing overwrite")
+    state = load(legacy)
+    require(state["run_id"] == name, "checkpoint run ID mismatch")
+    # This is a move, not a copy: never leave two divergent canonical states.
+    target.parent.mkdir(parents=True, exist_ok=True)
+    os.rename(legacy, target)
+    # Remove now-empty legacy parents only; never touch unrelated .pstack files.
+    for parent in (legacy.parent, legacy.parent.parent):
+        try:
+            parent.rmdir()
+        except OSError:
+            break
+    print("Migrated", legacy.relative_to(root), "->", target.relative_to(root))
+
 
 def atomic(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -301,6 +342,8 @@ def parser():
     h = add("hook")
     h.add_argument("--event", choices=("sessionStart", "postToolUse"), required=True)
     add("install-cursor-hooks")
+    q = add("migrate")
+    q.add_argument("--run", required=True)
     return p
 
 def main():
@@ -311,6 +354,7 @@ def main():
         elif a.command in ("status", "resume"): print(status(a))
         elif a.command == "hook": hook(a)
         elif a.command == "install-cursor-hooks": install(a)
+        elif a.command == "migrate": migrate(a)
         return 0
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print("checkpoint: " + str(exc), file=sys.stderr)
