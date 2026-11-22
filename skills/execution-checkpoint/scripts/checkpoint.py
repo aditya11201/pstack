@@ -12,8 +12,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-TASK = re.compile(r"^###\\s+(?:Task|Phase)\\s+(\\d+)\\s*[:.\\-]?\\s*(.+)$", re.I)
-STEP = re.compile(r"^\\s*-\\s*\\[([ xX])\\]\\s*(.+)$")
+TASK = re.compile(r"^###\s+(?:Task|Phase)\s+(\d+)\s*[:.\-]?\s*(.+)$", re.I)
+STEP = re.compile(r"^\s*-\s*\[([ xX])\]\s*(.+)$")
 SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$")
 
 def now():
