@@ -31,7 +31,7 @@ The original approved `docs/plans/*.md` remains read-only.
 ```mermaid
 flowchart TD
   A[Approved implementation plan] --> B[checkpoint init]
-  B --> C[.pstack/executions/run-id/state.json]
+  B --> C[docs/executions/run-id/state.json]
   D[Coordinator implements task] --> E[checkpoint step / task / note]
   E --> C
   C --> F[summary.md]
@@ -78,12 +78,25 @@ boxes are not treated as proof of executed work. Completed steps/tasks
 require nonempty evidence. The tool **does not** execute or verify the
 evidence; the coordinator must run tests and compare with Git.
 
+## Migrating existing checkpoints
+
+Runs created with the previous layout are still readable under `.pstack/executions/<run-id>/`, including by the OpenCode 2 plugin. New runs are created under `docs/executions/<run-id>/`.
+
+To move an existing run safely into the `docs/` hierarchy without losing its history or state:
+
+```bash
+python3 "$CHECKPOINT" migrate --repo . --run feature
+python3 "$CHECKPOINT" resume --repo . --run feature
+```
+
+Migration is explicit, preserves the existing `state.json` and generated reports, refuses collisions, and does not create a second canonical state. Do not delete the old directory before checking the migrated run.
+
 ## Storage contract
 
 ```text
 working-repo/
   docs/plans/2026-11-22-feature.md  # Approved plan
-  .pstack/executions/feature/
+  docs/executions/feature/
     state.json                       # Canonical current state and events
     summary.md                      # Human-readable report and next action
     progress.md                     # Chronological actions and evidence
