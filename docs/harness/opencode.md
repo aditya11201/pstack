@@ -87,6 +87,32 @@ After a context reset, run `python3 <installed-skill>/scripts/checkpoint.py resu
 
 OpenCode uses the agent instructions, not Cursor hooks. Cursor's optional hook setup is documented in [execution-checkpoint.md](execution-checkpoint.md), with the limitation that `sessionStart` fires for a newly created conversation, not guaranteed at in-place compaction.
 
+## OpenCode 2 native checkpoint recovery
+
+OpenCode 2 is a supported host, with a **native V2 plugin** (not the legacy V1 `experimental.session.compacting` hook). The repository installer places `examples/opencode2/pstack-execution-checkpoint.js` into `~/.config/opencode/plugins/pstack-execution-checkpoint.js`, merging with existing plugins without replacing unrelated files. OpenCode 2 discovers this directory automatically. Restart OpenCode if the plugin is not detected.
+
+- `ctx.session.hook("context", ...)`: loads the selected run from the **actual session directory** before every agent model request, including the first request following compaction.
+- `ctx.session.hook("compaction", ...)`: supplies the same short state reference to the compaction summary model.
+- `ctx.session.get({sessionID})`: determines the workspace for each invocation; a missing, ambiguous, or symlink-escaped run fails closed.
+- `/execution-resume <run-id>`: explicit manual inspection of the canonical state, Git diff, completed steps, blockers and next action (does **not** auto-implement).
+- Only a single pinned run is selected when multiple runs exist; set `PSTACK_RUN_ID` when invoking OpenCode 2, or pass `--run` to the CLI. The global pin still resolves relative to the session's own repository.
+- The plugin reads state; agents must explicitly write checkpoints using the `execution-checkpoint` skill and its CLI. It does not approve commits, apply Terraform, or execute jobs.
+
+Verify actual V2 plugin registration on the running host:
+
+```bash
+opencode2 api get /api/plugin
+# Expect plugin id: pstack.execution-checkpoint
+```
+
+Run its local contract tests:
+
+```bash
+node --test examples/opencode2/pstack-execution-checkpoint.test.mjs
+```
+
+**Compatibility note:** OpenCode 2's plugin API remains beta; verify against the installed OpenCode 2 version before production use. [Official V2 plugin API](https://opencode.ai/v2/docs/build/plugins/). The test suite mocks the documented plugin hooks but does not prove a live OpenCode 2 process loaded them.
+
 ## Models
 
 `examples/pstack-models.md` is a cost-tiered starting point, not a requirement. Edit it to
