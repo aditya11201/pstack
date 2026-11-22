@@ -12,6 +12,8 @@ not modified; the layer is additive, so `git merge upstream/main` stays clean.
 | `skills/systematic-debugging/` | Root-cause debugging method (from Superpowers, MIT). |
 | `skills/test-driven-development/` | The single TDD procedure (from Superpowers, MIT). |
 | `skills/verification-before-completion/` | Fresh evidence on the final diff before claiming success (from Superpowers, MIT). |
+| `skills/plan-gap-interview/` | After a plan is drafted: finds its gaps, resolves facts itself, interviews the user one question at a time, and waits for approval. Uses `grilling` from mattpocock/skills. |
+| `examples/commands/plan-review.md` | `/plan-review` command to run the same interview manually, e.g. from the built-in `plan` agent. |
 | `examples/pstack-models.md` | Example per-role model mapping (OpenAI + Alibaba Token Plan). |
 | `examples/opencode.jsonc` | Example workspace config: disable the Superpowers plugin locally and gate risky commands. |
 
@@ -21,8 +23,9 @@ second copy of upstream skills beyond the three method skills above.
 ## Install
 
 ```sh
-# 1. Skills (upstream pstack + the three method skills)
+# 1. Skills (upstream pstack + the method skills) and the grilling interview method
 npx skills add aditya11201/pstack
+npx skills add mattpocock/skills --skill grilling -g
 
 # 2. Agent (one-time)
 mkdir -p ~/.config/opencode/agents
@@ -31,6 +34,8 @@ cp agents/pstack-engineer.md ~/.config/opencode/agents/
 # 3. Optional: model mapping and workspace config
 cp examples/pstack-models.md ~/.agents/pstack-models.md   # edit to your providers
 # Merge examples/opencode.jsonc into your project's opencode.jsonc
+mkdir -p ~/.config/opencode/commands
+cp examples/commands/plan-review.md ~/.config/opencode/commands/
 ```
 
 Select the `pstack-engineer` agent in OpenCode, choose a parent model in `/models`,
@@ -44,6 +49,8 @@ decision. The agent's crosswalk maps pstack steps to this workflow's methods:
 
 - Root-cause / reproduce → `systematic-debugging`, once; carry evidence into the fix.
 - Failing-test-first / `tdd` → `test-driven-development` only; skip pstack `tdd`.
+- Plan written → `plan-gap-interview` + `grilling`: one question at a time, no code edits,
+  requirements summary, and the plan is handed back only after the user approves.
 - Verify before done → `verification-before-completion` on the final revision.
 - Delegate / swarm / arena → Orca `orchestration` when the user asks; otherwise inline.
 - Opening a PR / shipping / commit / rebase → skip unless explicitly authorized.
@@ -79,4 +86,6 @@ git merge upstream/main   # additive layer keeps this conflict-free
 ## Attribution
 
 Upstream pstack is MIT (Lauren Tan and contributors). The three method skills are from
-[obra/superpowers](https://github.com/obra/superpowers), MIT (Jesse Vincent). See `NOTICE.md`.
+[obra/superpowers](https://github.com/obra/superpowers), MIT (Jesse Vincent).
+`plan-gap-interview` adapts parts of Superpowers and
+[mattpocock/skills](https://github.com/mattpocock/skills), MIT (Matt Pocock). See `NOTICE.md`.

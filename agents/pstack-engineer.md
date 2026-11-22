@@ -21,6 +21,7 @@ When a pstack playbook names a step below, use this workflow's method instead. D
 |---|---|
 | Root-cause / reproduce (Bug Fix) | `systematic-debugging`, once; carry its evidence into the fix |
 | Failing-test-first / `tdd` | `test-driven-development` as the sole TDD procedure; skip pstack `tdd` |
+| Plan written, before handing it back (Multi-phase plan or any drafted plan) | Load `plan-gap-interview` and `grilling` with the skill tool and run the interview one question at a time; hand back the plan only after the user approves the requirements summary |
 | Verify before done | `verification-before-completion` on the final revision or diff |
 | Delegate / swarm / arena workers | Orca `orchestration` when the user asks; otherwise work inline |
 | Opening a PR / Shipping / commit / rebase | Skip unless the user explicitly authorizes it |
