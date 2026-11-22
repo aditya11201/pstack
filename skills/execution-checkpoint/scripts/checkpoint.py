@@ -143,6 +143,9 @@ def change(args):
     root = root_path(args.repo)
     folder = run_folder(root, args.run)
     state = load(folder)
+    plan = inside(root, state["plan"]["path"])
+    if not plan.is_file() or hashlib.sha256(plan.read_bytes()).hexdigest() != state["plan"]["sha256"]:
+        raise ValueError("approved plan changed; reconcile scope before mutating execution state")
     kind, evidence = args.command, getattr(args, "evidence", "") or ""
     if kind == "task":
         t = task(state, args.task)
@@ -202,7 +205,7 @@ def git(root, *cmd):
 
 def status(args):
     root = root_path(args.repo)
-    folder = run_folder(root, args.run)
+    folder = run_folder(root, getattr(args, "run", None))
     state = load(folder)
     p = inside(root, state["plan"]["path"])
     drift = not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != state["plan"]["sha256"]
