@@ -75,6 +75,12 @@ class CheckpointTests(unittest.TestCase):
         (self.repo / "docs/plans/test.md").write_text(PLAN + "new scope\n")
         self.assertIn("[DRIFT", self.command("resume", "--run", "feature"))
 
+    def test_plan_drift_blocks_status_mutations(self):
+        self.initialize()
+        (self.repo / "docs/plans/test.md").write_text(PLAN + "\\nChanged scope\\n")
+        self.command("note", "--run", "feature", "--summary", "should not write", expected=2)
+        self.assertEqual(self.state()["summary"], "")
+
     def test_hook_install_is_additive_and_idempotent(self):
         self.initialize()
         directory = self.repo / ".cursor"
