@@ -14,7 +14,7 @@ not modified; the layer is additive, so `git merge upstream/main` stays clean.
 | `skills/verification-before-completion/` | Fresh evidence on the final diff before claiming success (from Superpowers, MIT). |
 | `skills/brainstorming/` | Interview and design first; an architectural change gets a spec in `docs/specs/` that the user approves (from Superpowers, MIT, modified). |
 | `skills/writing-plans/` | Writes the plan to `docs/plans/`, linked to its spec (from Superpowers, MIT, modified). |
-| `skills/plan-gap-interview/` | Plan mode checks a plan against its approved spec; change mode folds a requirement added later into the spec and plan. Asks one question at a time about new decisions only, then waits for approval. Uses `grilling` from mattpocock/skills. |
+| `skills/execution-checkpoint/` | Persistent execution status, evidence, decisions, blockers, summary, and resume points in the **working repo** under `.pstack/executions/<run-id>/`. |\n| `skills/plan-gap-interview/` | Plan mode checks a plan against its approved spec; change mode folds a requirement added later into the spec and plan. Asks one question at a time about new decisions only, then waits for approval. Uses `grilling` from mattpocock/skills. |
 | `examples/commands/plan-review.md` | `/plan-review` command to run the same interview manually, e.g. from the built-in `plan` agent. |
 | `examples/pstack-models.md` | Example per-role model mapping (OpenAI + Alibaba Token Plan). |
 | `examples/opencode.jsonc` | Example workspace config: disable the Superpowers plugin locally and gate risky commands. |
@@ -78,6 +78,40 @@ Ponytail gates coding: read affected code and callers before the first edit, reu
 existing function before adding one, preserve contracts and validation. Delegation uses
 self-contained worker briefs and waits for Orca results; a Codex hook-trust blocker is
 surfaced to the user, never auto-approved.
+
+## Resume an approved implementation after compaction
+
+Use `execution-checkpoint` for multi-step plans once implementation is explicitly authorized. Initialize it from the working codebase with `python3 <installed-skill>/scripts/checkpoint.py init --repo . --plan docs/plans/<file>.md --run <id>`. On each verifiable milestone, record a `step` or `task` completion with evidence and update the summary and next action. Use `block` / `unblock` for blockers, and `decision` for design choices.
+
+After a context reset, run `python3 <installed-skill>/scripts/checkpoint.py resume --repo . --run <id>` **before** implementing. The CLI reports plan hash drift, tasks still open, blockers, decisions, HEAD, and working diff. Verify results using actual tests/Git before trusting completion claims. The checkpoint is not a substitute for approvals or the `verification-before-completion` skill.
+
+OpenCode uses the agent instructions, not Cursor hooks. Cursor's optional hook setup is documented in [execution-checkpoint.md](execution-checkpoint.md), with the limitation that `sessionStart` fires for a newly created conversation, not guaranteed at in-place compaction.
+
+## OpenCode 2 native checkpoint recovery
+
+OpenCode 2 is a supported host, with a **native V2 plugin** (not the legacy V1 `experimental.session.compacting` hook). The repository installer places `examples/opencode2/pstack-execution-checkpoint.js` into `~/.config/opencode/plugins/pstack-execution-checkpoint.js`, merging with existing plugins without replacing unrelated files. OpenCode 2 discovers this directory automatically. Restart OpenCode if the plugin is not detected.
+
+- `ctx.session.hook("context", ...)`: loads the selected run from the **actual session directory** before every agent model request, including the first request following compaction.
+- `ctx.session.hook("compaction", ...)`: supplies the same short state reference to the compaction summary model.
+- `ctx.session.get({sessionID})`: determines the workspace for each invocation; a missing, ambiguous, or symlink-escaped run fails closed.
+- `/execution-resume <run-id>`: explicit manual inspection of the canonical state, Git diff, completed steps, blockers and next action (does **not** auto-implement).
+- Only a single pinned run is selected when multiple runs exist; set `PSTACK_RUN_ID` when invoking OpenCode 2, or pass `--run` to the CLI. The global pin still resolves relative to the session's own repository.
+- The plugin reads state; agents must explicitly write checkpoints using the `execution-checkpoint` skill and its CLI. It does not approve commits, apply Terraform, or execute jobs.
+
+Verify actual V2 plugin registration on the running host:
+
+```bash
+opencode2 api get /api/plugin
+# Expect plugin id: pstack.execution-checkpoint
+```
+
+Run its local contract tests:
+
+```bash
+node --test examples/opencode2/pstack-execution-checkpoint.test.mjs
+```
+
+**Compatibility note:** OpenCode 2's plugin API remains beta; verify against the installed OpenCode 2 version before production use. [Official V2 plugin API](https://opencode.ai/v2/docs/build/plugins/). The test suite mocks the documented plugin hooks but does not prove a live OpenCode 2 process loaded them.
 
 ## Models
 
