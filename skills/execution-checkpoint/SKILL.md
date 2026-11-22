@@ -41,6 +41,7 @@ python3 "$CHECKPOINT" decision --repo . --run <id> --text "<decision>" --reason 
 
 - Evidence is the command you actually ran and the output you saw. The helper requires it to complete a step or task but does not run or check it; you do. A failed check is recorded as a failure or a blocker, never as complete.
 - A task completes only when all its steps are complete and it has no open blocker; the helper enforces both.
+- When the user grants or revokes a permission, record it at once: `decision --text "AUTH: <action and scope>" --reason "user, <date>"`. A revocation starts with `AUTH revoked:`. Also update the spec's `## Authorizations` section.
 - If the plan changed, the helper refuses updates. Reconcile scope with `plan-gap-interview` (change mode) and get approval before continuing.
 - Redact secrets, credentials, customer data and sensitive log bodies from evidence.
 
@@ -48,14 +49,15 @@ python3 "$CHECKPOINT" decision --repo . --run <id> --text "<decision>" --reason 
 
 1. `python3 "$CHECKPOINT" resume --repo . [--run <id>]`. It prints progress, next action, blockers, decisions, HEAD, diff stat, and plan drift.
 2. Treat that output as claims. Compare it with the approved plan, `git status`, `git diff`, and the recorded evidence; rerun a check when the evidence is stale or missing.
-3. If the plan drifted, stop and report it. Otherwise continue from the first unverified step.
-4. Resuming does not grant permission to implement. Continue only if implementation was already authorized for this run; otherwise report state and wait.
+3. Reread the spec's `## Authorizations` section and the `AUTH:` decisions. Grants recorded there are still in force; do not ask for them again.
+4. If the plan drifted, stop and report it. Otherwise continue from the first unverified step.
+5. Resuming does not grant permission to implement. Continue only if implementation was already authorized for this run; otherwise report state and wait.
 
 ## Host integration
 
 - **OpenCode 2:** the plugin `pstack-execution-checkpoint.js` (installed by `install.sh`) injects a read-only summary of the single run, or the pinned run, into the session context. It never writes state. Still call `resume` yourself after compaction.
 - **Cursor:** `python3 "$CHECKPOINT" install-cursor-hooks --repo .` merges session-start and post-edit reminders into `.cursor/hooks.json`. Review the diff before committing it.
-- Nothing here commits, pushes, merges, deploys or deletes. Those keep their own explicit approval.
+- Nothing here commits, pushes, merges, deploys or deletes. Those actions follow the agent's authorization contract.
 
 ## Handoff
 

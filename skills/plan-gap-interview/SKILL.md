@@ -14,6 +14,12 @@ Load the `grilling` skill with the skill tool now if it is not loaded yet. It is
 - **Plan mode**: a plan was just written (by `writing-plans` or a pstack playbook), or the user asks to review a plan.
 - **Change mode**: after the spec was approved, the user adds a requirement, a task, or a scope change. This includes during plan review and during implementation.
 
+A permission grant or revocation is not a change. Examples: "just commit, don't ask", "you may start the instance with gcloud", "stop pushing". Do not use this skill for it. Follow the agent's authorization contract instead:
+
+1. Update the spec's `## Authorizations` section.
+2. Record an `AUTH:` checkpoint decision.
+3. Continue the current work.
+
 ## Rules for the whole session
 
 - Do not write or modify code, config, or tests. The only files you may edit are the spec in `docs/specs/` and the plan in `docs/plans/`, and only as these steps say. Use read-only commands for everything else.
@@ -31,7 +37,7 @@ Load the `grilling` skill with the skill tool now if it is not loaded yet. It is
    4. **Failure modes.** Each edge input or failure the spec implies has a task that tests it.
    5. **Dependencies and environment.** Landing order, target environment, secrets, versions.
    6. **Risk and rollback.** Irreversible or outward-facing actions and how to undo each one.
-   7. **Authorization.** Which actions need the user's explicit go.
+   7. **Authorization.** The spec has an `## Authorizations` section. Every outward action the plan needs is in exactly one of its lists: allowed without asking, ask first, or forbidden. Outward actions include commit, push, MR/PR, ticket updates, cloud or CI actions, merge, and deploy. An action missing from all three lists is a decision gap. The plan contains no "wait for the user's go" line that contradicts the spec.
 3. Sort each gap. A **fact** you look up and record with its source. A gap the plan can close without a new decision you mark as a plan edit. A **decision** the spec does not settle goes to the interview.
 4. If no decision gap is left, skip the interview and go to the summary.
 

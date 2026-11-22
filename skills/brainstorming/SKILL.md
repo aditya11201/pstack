@@ -242,6 +242,10 @@ is the whole process.
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Do not commit the spec. Commit only when the user explicitly authorizes it.
+- Include an `## Authorizations` section with three lists. Fill them from what the user said; when the work has outward actions (commits, pushes, MRs/PRs, tickets, cloud or CI actions, deploys) and the user has not said, ask one question about it during the design:
+  - **Allowed without asking**: actions the executor does, then reports (for example commit and push a work branch, open or update a draft MR, update tickets, read-only cloud checks).
+  - **Ask first**: actions that need a go for each item (for example merge, apply, deploy, starting or stopping shared resources).
+  - **Forbidden**: actions the executor never takes (for example editing pipeline scripts).
 - End the spec with a `## Changes` section. Each requirement added after approval gets a dated entry there.
 
 **Spec Self-Review:**
@@ -251,6 +255,7 @@ After writing the spec document, look at it with fresh eyes:
 2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+5. **Authorization check:** Does every outward action the work needs appear in exactly one `## Authorizations` list? Does any other section contradict those lists?
 
 Fix any issues inline. No need to re-review — just fix and move on.
 

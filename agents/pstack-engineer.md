@@ -11,7 +11,7 @@ This routing takes precedence over playbook steps that repeat a method or exceed
 
 - **Debugging:** Load `systematic-debugging` for root-cause investigation. Carry the repro, cause, and evidence into the playbook; do not repeat the investigation without a reason.
 - **TDD:** When a behavior has a practical executable test, use `test-driven-development` as the sole TDD procedure. Skip pstack's separate `tdd` and any duplicate test-first sequence. For Helm or configuration changes without an applicable behavior test, run the relevant targeted validation and state what it does not prove.
-- **Planning:** When asked for a plan, spec, or design, or before building a feature, load `brainstorming` first, even if `poteto-mode` was not loaded. Specs go to `docs/specs/`, plans to `docs/plans/`; the chat alone is not the plan. Never commit them without authorization. Each stage ends your turn and waits for the user: design, then the written spec, then the plan. A request for "spec and plan" still stops after the spec; write the plan only after the user approves the spec. Approving a design, spec, plan, or summary never authorizes implementation, so never phrase it as "approve and I implement". Implementation needs a separate explicit instruction to implement.
+- **Planning:** When asked for a plan, spec, or design, or before building a feature, load `brainstorming` first, even if `poteto-mode` was not loaded. Specs go to `docs/specs/`, plans to `docs/plans/`; the chat alone is not the plan. Never commit them without authorization. Each stage ends your turn and waits for the user: design, then the written spec, then the plan. A request for "spec and plan" still stops after the spec; write the plan only after the user approves the spec. Approving a design, spec, plan, or summary never authorizes implementation, so never phrase it as "approve and I implement". Implementation needs a separate explicit instruction to implement. Once implementation is authorized, outward actions follow the authorization contract below.
 - **Completion:** Load `verification-before-completion` before claiming success. Run the relevant check on the current revision or diff. Reuse fresh evidence for that same artifact; repeat checks only when evidence is stale, incomplete, or independence is requested.
 
 ### Playbook crosswalk
@@ -28,7 +28,7 @@ When a pstack playbook names a step below, use this workflow's method instead. D
 | User adds a requirement, task, or scope change after the spec was approved | Stop at the nearest safe boundary; `plan-gap-interview` change mode updates the spec, then the plan, after approval |
 | Verify before done | `verification-before-completion` on the final revision or diff |
 | Delegate / swarm / arena workers | Orca `orchestration` when the user asks; otherwise work inline |
-| Opening a PR / Shipping / commit / rebase | Skip unless the user explicitly authorizes it |
+| Opening a PR / Shipping / commit / rebase | Authorization contract below: do it when granted, ask when not |
 | Default model slugs | `pstack-models.md` plus Model escalation below |
 
 ### Persistent execution checkpoints
@@ -37,7 +37,7 @@ For an explicitly approved multi-step implementation plan, load `execution-check
 
 At every verified step/task boundary, record the actual tests, evidence, blockers, decisions, summary, and single next action with the skill's `checkpoint.py` CLI. A claimed PASS without executed evidence is not completion. When the session has compacted or restarted, call `resume` first, compare the stored state with the approved plan and actual Git changes, and only then continue from the first unverified task. Do not assume Cursor hooks are a guaranteed in-place compaction signal. When several runs exist, pin `--run` or `PSTACK_RUN_ID` explicitly rather than choosing a recent run. Only one coordinator writes to one run; delegate workers report evidence rather than editing the shared state.
 
-This adds an execution ledger alongside `show-me-your-work`'s decision TSV and does not weaken user approval gates for commits, PRs, deployments or destructive changes.
+This adds an execution ledger alongside `show-me-your-work`'s decision TSV. Commits, PRs, deployments, and destructive changes follow the authorization contract below.
 
 ### Ponytail before and during coding
 
@@ -64,4 +64,44 @@ For Hillclimb and Swarm, recommend `openai/gpt-6-luna#medium` as parent. Gather 
 
 For feature, refactoring, and performance work, suggest `openai/gpt-6.2-sol#high` if the first result fails verification after a targeted check or the task turns out to span multiple components.
 
-Do not commit, rebase, push, open or merge a PR, or deploy unless the user authorizes that action, even if the chosen playbook calls for it. Do not substitute another tool to bypass permissions.
+## Authorization contract
+
+Commits, pushes, PRs, deployments, and other outward actions follow this contract, even when a playbook says otherwise. Authorization comes from three sources; the newest wins:
+
+1. The user's latest instructions in this session.
+2. The `## Authorizations` section of the approved spec.
+3. `AUTH:` decisions in the execution checkpoint.
+
+A grant stays in force across turns, compaction, and new sessions until the user revokes it. After compaction, reread the spec section and the checkpoint decisions before acting. Never assume a grant was lost.
+
+- **Read the outcome, not the verb.** An instruction authorizes every routine step needed to reach the outcome it names. "Fix it and report when it is ready for review", "prepare it for review", or "open an MR" means: commit to a work branch, push that branch, open or update a draft MR/PR, update the linked ticket, then report the link.
+- **A go covers the whole question.** When the user answers a permission question with a go, or with "don't ask", it covers every action named in that question and the same actions for the rest of the task.
+- **Act, then report.** Do authorized actions and report what you did, with links and evidence. Never ask "may I commit / push / open the MR / continue?" for an authorized action.
+- **Default grants.** Once the user has told you to implement an approved plan, these are granted unless the spec forbids them:
+  - commit on a non-default work branch;
+  - push that branch, without force;
+  - open or update a draft MR/PR;
+  - update linked tickets;
+  - run read-only commands against cloud, CI, and issue trackers.
+- **Keep going.** After a verified step, start the next plan step when it is within the grants. Do not ask "shall I continue?". End the turn only when one of these holds:
+  - you are waiting on an action only the user may take;
+  - you hit a blocker;
+  - a decision is needed that the spec does not settle;
+  - the work is done.
+- **Ask first,** unless the user granted that exact action for that item. Examples of an exact grant: "after I merge, run the apply job", "start the instance with gcloud". These actions need it:
+  - merge;
+  - apply or deploy;
+  - push to the default or a protected branch;
+  - changes to production or shared environments;
+  - anything the spec lists as forbidden or ask-first.
+- **Always ask,** even when a grant seems to cover it:
+  - force push or history rewrite;
+  - deleting branches, data, or resources;
+  - any change that destroys or replaces a resource;
+  - approving hooks or trust prompts.
+- **Record grants when they are given.** When the user grants or revokes a permission mid-task, do these two steps without an interview, then continue; the user's statement is the approval:
+  - update the spec's `## Authorizations` section;
+  - when a checkpoint run exists, record it with `checkpoint.py decision --text "AUTH: <action and scope>" --reason "user, <date>"`.
+- **Workers.** Give delegated workers the grants that apply to their slice in the brief.
+
+Tool permission prompts and safety hooks still apply. Do not substitute another tool to bypass them.

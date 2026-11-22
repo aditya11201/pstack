@@ -54,7 +54,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** Implement task-by-task with `test-driven-development` and `verification-before-completion`. Steps use checkbox (`- [ ]`) syntax for tracking. Commit steps run only when the user has authorized commits.
+> **For agentic workers:** Implement task-by-task with `test-driven-development` and `verification-before-completion`. Steps use checkbox (`- [ ]`) syntax for tracking. Commits, pushes, MRs and other outward actions follow the spec's `## Authorizations` section and later grants recorded as `AUTH:` checkpoint decisions.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -70,7 +70,8 @@ argues from the spec, so the spec travels with it; executors read both]
 [The spec's project-wide requirements — version floors, dependency limits,
 naming and copy rules, platform requirements — one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
-include this section.]
+include this section. Do not restate or narrow the spec's `## Authorizations`
+here and do not add "wait for the user's go" lines; refer to that section.]
 
 ## Review Focus
 
