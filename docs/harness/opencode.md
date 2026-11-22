@@ -12,13 +12,15 @@ not modified; the layer is additive, so `git merge upstream/main` stays clean.
 | `skills/systematic-debugging/` | Root-cause debugging method (from Superpowers, MIT). |
 | `skills/test-driven-development/` | The single TDD procedure (from Superpowers, MIT). |
 | `skills/verification-before-completion/` | Fresh evidence on the final diff before claiming success (from Superpowers, MIT). |
-| `skills/plan-gap-interview/` | After a plan is drafted: finds its gaps, resolves facts itself, interviews the user one question at a time, and waits for approval. Uses `grilling` from mattpocock/skills. |
+| `skills/brainstorming/` | Interview and design first; an architectural change gets a spec in `docs/specs/` that the user approves (from Superpowers, MIT, modified). |
+| `skills/writing-plans/` | Writes the plan to `docs/plans/`, linked to its spec (from Superpowers, MIT, modified). |
+| `skills/plan-gap-interview/` | Plan mode checks a plan against its approved spec; change mode folds a requirement added later into the spec and plan. Asks one question at a time about new decisions only, then waits for approval. Uses `grilling` from mattpocock/skills. |
 | `examples/commands/plan-review.md` | `/plan-review` command to run the same interview manually, e.g. from the built-in `plan` agent. |
 | `examples/pstack-models.md` | Example per-role model mapping (OpenAI + Alibaba Token Plan). |
 | `examples/opencode.jsonc` | Example workspace config: disable the Superpowers plugin locally and gate risky commands. |
 
 pstack itself stays a prerequisite, installed separately. This repo does not vendor a
-second copy of upstream skills beyond the three method skills above.
+second copy of upstream skills beyond the method skills above.
 
 ## Install
 
@@ -49,8 +51,10 @@ decision. The agent's crosswalk maps pstack steps to this workflow's methods:
 
 - Root-cause / reproduce → `systematic-debugging`, once; carry evidence into the fix.
 - Failing-test-first / `tdd` → `test-driven-development` only; skip pstack `tdd`.
-- Plan written → `plan-gap-interview` + `grilling`: one question at a time, no code edits,
-  requirements summary, and the plan is handed back only after the user approves.
+- Feature or plan request → `brainstorming` → spec in `docs/specs/` → user approves the spec →
+  `writing-plans` → plan in `docs/plans/` → `plan-gap-interview` (plan mode) → user approves.
+- Requirement added after the spec was approved → stop at a safe boundary →
+  `plan-gap-interview` (change mode) → approval → spec, then plan, updated.
 - Verify before done → `verification-before-completion` on the final revision.
 - Delegate / swarm / arena → Orca `orchestration` when the user asks; otherwise inline.
 - Opening a PR / shipping / commit / rebase → skip unless explicitly authorized.
@@ -71,7 +75,7 @@ selection. Note: `alibaba-token-plan/qwen4-max-preview` is scheduled to retire o
 ## Guardrails
 
 `examples/opencode.jsonc` disables the Superpowers plugin for the workspace
-(`plugins: ["-superpowers"]`) so the three local method skills are the single source, and
+(`plugins: ["-superpowers"]`) so the local method skills are the single source, and
 sets `ask` permissions for commit, rebase, push, PR/MR CLI, Helm install/upgrade,
 `kubectl apply`, and Terraform apply/destroy. These are not a complete mutation list;
 cluster access control, branch protection, and CI approvals still apply.
@@ -85,7 +89,7 @@ git merge upstream/main   # additive layer keeps this conflict-free
 
 ## Attribution
 
-Upstream pstack is MIT (Lauren Tan and contributors). The three method skills are from
+Upstream pstack is MIT (Lauren Tan and contributors). The method skills are from
 [obra/superpowers](https://github.com/obra/superpowers), MIT (Jesse Vincent).
 `plan-gap-interview` adapts parts of Superpowers and
 [mattpocock/skills](https://github.com/mattpocock/skills), MIT (Matt Pocock). See `NOTICE.md`.

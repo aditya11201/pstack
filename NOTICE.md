@@ -10,6 +10,8 @@ The following skills in `skills/` are copied from
 - `systematic-debugging`
 - `test-driven-development`
 - `verification-before-completion`
+- `brainstorming` (modified: specs go to `docs/specs/`, no automatic commit, changes log)
+- `writing-plans` (modified: plans go to `docs/plans/`, gap-check handoff replaces execution handoff)
 
 `skills/plan-gap-interview` is original to this fork but adapts the Self-Review checklist of
 `writing-plans` from obra/superpowers and the ambiguity challenge and ADR criteria of

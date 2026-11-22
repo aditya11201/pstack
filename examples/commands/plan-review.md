@@ -1,7 +1,7 @@
 ---
-description: Review a drafted plan for gaps and interview me before implementation
+description: Check a plan against its spec for gaps, or fold a new requirement into the spec and plan
 ---
 
-Load the `plan-gap-interview` and `grilling` skills with the skill tool, then run them on this plan: $ARGUMENTS
+Load the `plan-gap-interview` and `grilling` skills with the skill tool, then run them on: $ARGUMENTS
 
-If no plan is named, use the most recent plan in this conversation. Ask one question at a time. Do not write or modify code. End with the requirements summary and wait for my approval.
+If this names a plan, or nothing, use plan mode on that plan or the most recent one in `docs/plans/`. If it describes a new requirement or task, use change mode. Ask one question at a time. Do not write or modify code. End with the summary and wait for my approval.
