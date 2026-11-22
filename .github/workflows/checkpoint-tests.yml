@@ -5,6 +5,7 @@ on:
     paths:
       - "skills/execution-checkpoint/**"
       - ".github/workflows/checkpoint-tests.yml"
+      - "install.sh"
       - "examples/opencode2/**"
   workflow_dispatch:
 
@@ -24,6 +25,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Verify checkpoint helper
         run: |
+          sh -n install.sh
           python -m py_compile skills/execution-checkpoint/scripts/checkpoint.py
           python -m unittest discover -s skills/execution-checkpoint/tests -v
 
