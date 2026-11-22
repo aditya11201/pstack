@@ -78,6 +78,12 @@ def migrate(args):
     # This is a move, not a copy: never leave two divergent canonical states.
     target.parent.mkdir(parents=True, exist_ok=True)
     os.rename(legacy, target)
+    # Remove now-empty legacy parents only; never touch unrelated .pstack files.
+    for parent in (legacy.parent, legacy.parent.parent):
+        try:
+            parent.rmdir()
+        except OSError:
+            break
     print("Migrated", legacy.relative_to(root), "->", target.relative_to(root))
 
 
