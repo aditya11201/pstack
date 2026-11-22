@@ -1,0 +1,4 @@
+---
+description: Resume a tracked implementation from its repository-local checkpoint after compaction or session restart
+---
+Load the `execution-checkpoint` skill before continuing. From the **current working repository**, run the installed checkpoint helper's `resume --repo .` (include `--run $ARGUMENTS` if an explicit run ID was supplied). If more than one run exists and no run ID is supplied, stop and ask which run to resume. Read the selected `state.json`, `progress.md`, `blockers.md`, the approved plan and working-tree Git diff; verify that previously completed steps have real evidence and that the plan hash has not drifted. If plan drift exists, report it and request a plan reconciliation before editing code. Describe the completed steps, blockers, current working state, and next unverified action. Do not automatically implement, commit, merge, deploy, or perform destructive operations. Wait for a separate explicit execution instruction.
