@@ -29,6 +29,12 @@
   Poteto's Bro Skill was created by me, <a href="https://github.com/backnotprop/bro">backnotprop/bro</a>
 </p>
 
+## Persistent execution checkpoints (fork addition)
+
+This fork includes an optional [`execution-checkpoint`](skills/execution-checkpoint/SKILL.md) skill for tracking an approved implementation plan in the **working project's repository**. It records task and step status, test evidence, blockers, decisions, current summary, and a resume point under `.pstack/executions/<run-id>/`. After a context reset or compaction, the agent reads this state and verifies it against Git before continuing. It does not automatically run or approve implementation steps.
+
+See [architecture, usage, and Cursor hook limitations](docs/harness/execution-checkpoint.md). The existing `show-me-your-work` decision audit remains separate.
+
 ## Install
 
 pstack is a folder of plain [Agent Skills](https://agentskills.io) (`skills/<name>/SKILL.md`). You don't need [Cursor](https://github.com/cursor/plugins/tree/main/pstack). The [`skills` CLI](https://skills.sh) installs them into Claude Code, Codex, Pi, Cursor, OpenCode, and other agents:
