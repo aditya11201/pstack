@@ -35,7 +35,7 @@ test("loads active run and summarizes current progress", async (t) => {
 test("fails closed on ambiguous runs instead of choosing the newest", async (t) => {
   const { root } = await fixture(t)
   await mkdir(join(root, "docs/executions/another"), { recursive: true })
-  await writeFile(join(root, ".pstack/executions/another/state.json"), "{}")
+  await writeFile(join(root, "docs/executions/another/state.json"), "{}")
   assert.equal(await readCheckpoint(root, ""), null)
   assert.equal((await readCheckpoint(root, "feature")).run, "feature")
 })
