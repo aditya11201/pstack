@@ -7,6 +7,8 @@ description: Teach a codebase visually. Use when the user says "teach me", "lear
 
 Turn one codebase topic into a `lesson.md`: a complete Markdown reference that also renders as a local visual page. The hub owns the schema, tokens, lint, and scan. This skill owns the guidance and the content. Nothing leaves the machine unless the user asks for that lesson to be uploaded or published.
 
+A request to use this skill is the user's request for this outcome: a lesson committed on `lesson/<repoKey>/<slug>` in the local hub and served on localhost. That outcome includes creating or switching to that branch and making the local commit. The hub has no remote, so the commit never leaves the machine. Do not skip the commit or ask about it. It does not authorize push, upload, or publish.
+
 ## Resolve the hub
 
 ```sh
@@ -48,7 +50,7 @@ git -C "$HUB" switch "lesson/$repoKey/$slug" 2>/dev/null ||
 mkdir -p "$HUB/content/$repoKey/$slug"
 ```
 
-Write `content/<repoKey>/<slug>/lesson.md`, plus `skeletons/` when used. Then commit, and commit only that folder:
+Write `content/<repoKey>/<slug>/lesson.md`, plus `skeletons/` when used. The local commit is required, not optional. Commit only that folder:
 
 ```sh
 git -C "$HUB" add "content/$repoKey/$slug"
@@ -78,6 +80,15 @@ curl -s -o /dev/null -w '%{http_code}' http://localhost:4321/
 - Any answer: reuse the server only if it serves this hub. Its home HTML contains `data-lesson-target`, and `http://localhost:4321/<repoKey>/<slug>/` returns 200. Otherwise report the port conflict and do not claim a URL.
 
 Start the dev server from `$HUB` and leave it running; Astro may detach it itself, so check readiness with curl, not the process.
+
+Before reporting the URL, require the lesson commit to be visible:
+
+```sh
+git -C "$HUB" log -1 --format=%s
+git -C "$HUB" status --porcelain -- "content/$repoKey/$slug"
+```
+
+The first must print `lesson: add <repoKey>/<slug>`; the second must print nothing. If either check fails, do not report success.
 
 Confirm the lesson URL returns 200 and its HTML contains `Step 1 of`, then end the reply with that URL. Do not offer or ask about uploading.
 
