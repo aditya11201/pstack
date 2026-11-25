@@ -15,6 +15,7 @@ not modified; the layer is additive, so `git merge upstream/main` stays clean.
 | `skills/spec-first/` | Intent and design first; larger work gets a spec in `docs/specs/` with `## Authorizations`, approved by the user. |
 | `skills/plan-from-spec/` | Writes the plan to `docs/plans/`, linked to its spec, then hands off to `plan-gap-interview`. |
 | `skills/execution-checkpoint/` | Persistent execution status, evidence, decisions, blockers, summary, and resume points in the **working repo** under `.pstack/executions/<run-id>/`. |\n| `skills/plan-gap-interview/` | Plan mode checks a plan against its approved spec; change mode folds a requirement added later into the spec and plan. Asks one question at a time about new decisions only, then waits for approval. Uses `grilling` from mattpocock/skills. |
+| `skills/learn-with-me/` | Writes a codebase lesson as one `lesson.md`, lints and scans it in the local hub (`~/.config/learn-with-me/config`), and renders it on `http://localhost:4321/<repoKey>/<slug>/`. Upload and publish only on request. |
 | `examples/commands/plan-review.md` | `/plan-review` command to run the same interview manually, e.g. from the built-in `plan` agent. |
 | `examples/pstack-models.md` | Example per-role model mapping (OpenAI + Alibaba Token Plan). |
 | `examples/opencode.jsonc` | Example workspace config: disable the Superpowers plugin if a user still has it, and gate risky commands. |
