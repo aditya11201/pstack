@@ -103,5 +103,24 @@ class PluginManifest(TmpRepo):
         self.assertIn("version", result.stderr)
 
 
+class GatedList(TmpRepo):
+    EXPECTED = [
+        "git commit", "git rebase", "git push", "gh pr create", "gh pr merge",
+        "glab mr create", "glab mr merge", "helm install", "helm upgrade",
+        "kubectl apply", "terraform apply", "terraform destroy",
+    ]
+
+    def test_gated_json(self):
+        gated = json.loads((REPO / "antigravity/hooks/gated.json").read_text())
+        self.assertEqual(gated, self.EXPECTED)
+
+    def test_gated_json_stale(self):
+        path = self.tmp / "antigravity/hooks/gated.json"
+        path.write_text('["git push"]\n')
+        result = run_build(self.tmp, "--check")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("antigravity/hooks/gated.json", result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

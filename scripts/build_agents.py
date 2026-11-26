@@ -24,6 +24,16 @@ def section(root, adapter, title):
     return "\n## Harness: " + title + "\n\n" + text
 
 
+def gated(root):
+    config = json.loads((root / "examples/opencode.jsonc").read_text())
+    prefixes = [
+        rule["resource"].removesuffix(" *")
+        for rule in config.get("permissions", [])
+        if rule.get("action") == "shell" and rule.get("effect") == "ask"
+    ]
+    return json.dumps(prefixes, indent=2) + "\n"
+
+
 def build(root):
     root = Path(root)
     core = (root / "agents/core/pstack-workflow.md").read_text()
@@ -32,6 +42,7 @@ def build(root):
     return {
         "agents/pstack-engineer.md": OPENCODE_FRONTMATTER + MARKER + "\n" + core + section(root, "opencode.md", "OpenCode"),
         "antigravity/rules/AGENTS.md": MARKER + "\n" + core + section(root, "antigravity.md", "Antigravity"),
+        "antigravity/hooks/gated.json": gated(root),
     }
 
 
