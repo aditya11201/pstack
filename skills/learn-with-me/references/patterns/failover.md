@@ -1,6 +1,14 @@
 # Failover
 
-Use when a primary handles writes, a replica can take over, and the reader should see the switch and what it costs.
+Use when a primary handles writes, a replica can take over, and the reader
+should see the switch and what it costs.
+
+## Metaphors
+
+- A spare tyre: it only matters when the road takes the first wheel.
+- A backup singer who knows every line but may be a beat behind.
+- Two keys to one door; the second key still opens it, but the room may be
+  missing the last thing carried in.
 
 ## Roles
 
@@ -22,6 +30,8 @@ flowchart LR
   primary -->|4 replicate| replica
   probe[Health check] -->|5 probe| primary
   probe -->|6 probe| replica
+  probe -->|7 report| lb
+  lb -->|8 response| client
 ```
 
 Keep the probe as a node: it explains why the router can make a decision at all.
@@ -42,7 +52,6 @@ timeline:
       - packet: { from: probe, to: lb, label: unhealthy }
       - packet: { from: lb, to: replica, label: failover write }
       - state: { node: replica, to: busy }
-      - counter: { id: errors, label: Failed writes, sum: count }
     else:
       - packet: { from: lb, to: primary, label: write }
       - state: { node: primary, to: busy }
@@ -54,6 +63,13 @@ narration:
   - at: 4
     text: The probe fails, the router switches, and writes land on the replica.
 ```
+
+## What the reader controls
+
+- **Trigger:** sends one request through the router.
+- **Toggle:** takes the primary down, so the probe fails and the router switches
+  to the replica.
+- No slider: the lesson is about a binary failure, not a rate.
 
 ## Suggested quiz
 
@@ -67,4 +83,5 @@ answer: Writes that had not replicated yet
 why: The replica is behind by the replication lag, so a promotion can omit the newest writes.
 ```
 
-Ask the reader to turn the toggle on mid-run and watch the error counter.
+Ask the reader to turn the toggle on mid-run and trace how the router learns
+about the failure.

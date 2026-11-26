@@ -1,6 +1,14 @@
 # Auth flow
 
-Use when a token stands between a user and a protected resource and the reader should see who issues, carries, and checks it.
+Use when a token stands between a user and a protected resource and the reader
+should see who issues, carries, and checks it.
+
+## Metaphors
+
+- A cloakroom ticket: the attendant issues it, and the counter checks it before
+  handing back the coat.
+- A passport check at a border: one authority issues it, another inspects it.
+- A wristband at an event: the door staff check it, not the person who sold it.
 
 ## Roles
 
@@ -24,9 +32,12 @@ flowchart LR
   client -->|6 request + token| api[API]
   api -->|7 verify| idp
   api -->|8 read| resource[(Resource)]
+  resource -->|9 data| api
+  api -->|10 response| client
 ```
 
-The token is a value on an edge, not a node. Add a refresh edge only in the step that explains expiry.
+The token is a value on an edge, not a node. Add a refresh edge only in the step
+that explains expiry.
 
 ## Scene
 
@@ -43,7 +54,6 @@ timeline:
       - packet: { from: api, to: client, label: 401 }
       - packet: { from: client, to: idp, label: refresh }
       - packet: { from: idp, to: client, label: new token }
-      - counter: { id: retries, label: Retries, sum: count }
     else:
       - state: { node: api, to: busy }
       - packet: { from: api, to: resource, label: read }
@@ -55,6 +65,13 @@ narration:
   - at: 3
     text: An expired token stops at the API and sends the client back for a new one.
 ```
+
+## What the reader controls
+
+- **Trigger:** calls the API with the current token.
+- **Toggle:** expires the token, so the API refuses and the client has to
+  refresh before retrying.
+- No slider: the lesson is about a yes/no check, not a rate.
 
 ## Suggested quiz
 

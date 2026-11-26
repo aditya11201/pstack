@@ -39,7 +39,7 @@ The approval is for that lesson at that content. Do not reuse it for another les
 Only when the hub is missing. It needs no GitHub repo, no Cloudflare account, and no network beyond npm.
 
 1. Confirm Node 24 and `gitleaks` are installed.
-2. Create `~/projects/learn-with-me` with the hub: Astro static site, the lesson schema and parser, the role list, `src/styles/tokens.css`, `scripts/lint.mjs`, `scripts/scan.sh`, `.gitleaks.toml`, and the pinned dependencies from the spec.
+2. Create `~/projects/learn-with-me` with the hub: Astro static site, the lesson schema and parser, the role list, `src/themes/<name>/tokens.css`, `scripts/lint.mjs`, `scripts/scan.sh`, `.gitleaks.toml`, and the pinned dependencies from the spec.
 3. Run `git init` inside it. Add no remote.
 4. Write `~/.config/learn-with-me/config` with one line: `hub=<absolute path>`.
 5. Render the sample lesson locally and confirm `http://localhost:4321/<repoKey>/<slug>/` returns 200.

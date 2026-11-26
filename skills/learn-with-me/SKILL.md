@@ -34,7 +34,11 @@ Run the two read-only subagents in parallel, briefed from `references/subagent-b
 
 ### 3. Compose
 
-Start from `templates/lesson.md`. Read `references/content-shape.md`, `references/explaining.md`, `references/diagrams.md`, `references/visual-system.md`, `references/icons.md`, `references/gamification.md`, and `references/interactive.md`. Pick the closest pattern in `references/patterns/`, then map its roles to this lesson's actors. Icon names go in `actors` only; mermaid nodes stay plain.
+Start from `templates/lesson.md`. Read `references/content-shape.md`, `references/explaining.md`, `references/diagrams.md`, `references/visual-system.md`, `references/icons.md`, `references/gamification.md`, `references/interactive.md`, and `references/stage-authoring.md`. Pick the closest pattern in `references/patterns/`, then map its roles to this lesson's actors. Icon names go in `actors` only; mermaid nodes stay plain.
+
+**Content profile (mandatory).** Read the `profile` in `$HUB/learn-with-me.config.json`, unless the user names one or the lesson frontmatter sets one. Then follow `references/profiles/<profile>.md`. The default, `plain-and-technical`, opens every step with an everyday analogy, then the precise terms tied back to it. Do not write a lesson from the technical layer alone.
+
+**Visual design (mandatory).** Load `threejs-web` with the skill tool, then the specialist skills its routing table names for this lesson's stage. Choose the visual metaphor from `references/visual-system.md` and `references/stage-authoring.md`. Decide whether the automatic stage with `stage.place` is enough or the lesson needs a `stage.mjs`. The theme owns colours and type; the lesson supplies ids, roles, scenes, and labels.
 
 ### 4. Skeletons
 
@@ -90,7 +94,7 @@ git -C "$HUB" status --porcelain -- "content/$repoKey/$slug"
 
 The first must print `lesson: add <repoKey>/<slug>`; the second must print nothing. If either check fails, do not report success.
 
-Confirm the lesson URL returns 200 and its HTML contains `Step 1 of`, then end the reply with that URL. Do not offer or ask about uploading.
+Confirm the lesson URL returns 200 and its HTML contains `Step 1 of`. Report the `threejs-*` skills you used, then end the reply with that URL. Do not offer or ask about uploading.
 
 ## Levels
 
@@ -104,7 +108,7 @@ Read `references/publishing.md` before any upload or publish. A request to uploa
 
 ## This slice
 
-Slice 1a renders `scene`, `quiz`, `order`, and `challenge` blocks as readable cards; they become interactive in later releases. Lessons still include them: one scene, one gamification block, and a Details list on every step.
+Slice 1b renders each step on a three.js stage, laid out in three columns. Scenes run on the stage; the Diagram tab stays static; without WebGL the diagram and narration show; with reduced motion each hop shows as a static frame with its narration. Every step follows the active content profile.
 
 ## Never
 

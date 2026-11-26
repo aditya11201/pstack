@@ -1,6 +1,13 @@
 # Rollout
 
-Use when two versions run side by side and traffic moves between them, with a rollback path.
+Use when two versions run side by side and traffic moves between them, with a
+rollback path.
+
+## Metaphors
+
+- Two lanes on a bridge and a sign that moves cars from one lane to the other.
+- A new recipe served at a few tables before the whole room.
+- A dimmer switch that moves light from one lamp to another.
 
 ## Roles
 
@@ -24,7 +31,8 @@ flowchart LR
   registry -->|5 image| new
 ```
 
-The build path explains what the new version runs. Keep it out of the traffic diagram only when a previous step already showed it.
+The build path explains what the new version runs. Keep it out of the traffic
+diagram only when a previous step already showed it.
 
 ## Stage
 
@@ -33,27 +41,31 @@ title: Moving traffic to the new version
 stage:
   grid: [12, 6]
   place:
-    - { actor: client, at: [1, 3] }
-    - { actor: router, at: [4, 3] }
-    - { actor: old, at: [8, 2] }
-    - { actor: new, at: [8, 4] }
+    - { actor: ci, at: [2, 1] }
+    - { actor: registry, at: [5, 1] }
+    - { actor: client, at: [1, 4] }
+    - { actor: router, at: [4, 4] }
+    - { actor: old, at: [8, 3] }
+    - { actor: new, at: [8, 5] }
 controls:
-  - slider: { id: share, label: New version share, min: 0, max: 100, default: 10 }
   - trigger: Send traffic
+  - slider: { id: share, label: New version share, min: 0, max: 100, default: 10 }
 timeline:
-  - spawn: { token: request, from: client, to: router, every: 10 }
+  - spawn: { token: request, from: client, to: router, every: 8 }
   - when: { share: ">0" }
     then:
-      - move: { token: request, from: router, to: new }
       - state: { node: new, to: busy }
+      - gauge: { node: new, value: share }
+    else:
+      - state: { node: new, to: idle }
   - when: { share: "<100" }
     then:
-      - move: { token: request, from: router, to: old }
       - state: { node: old, to: busy }
+    else:
+      - state: { node: old, to: idle }
   - when: { share: ">50" }
     then:
-      - bubble: { on: new, text: "Share: {share}%" }
-  - counter: { id: errors, label: Errors, sum: count }
+      - bubble: { on: new, text: Most traffic }
 narration:
   - at: 1
     text: The slider is the traffic split; the router sends each request to one version.
@@ -61,12 +73,24 @@ narration:
     text: Raising the share moves more requests without restarting either version.
 ```
 
-## Suggested challenge
+## What the reader controls
+
+- **Trigger:** starts the traffic stream.
+- **Slider:** sets the share of new-version traffic. The new version's gauge
+  follows it, and a version turns `idle` when its share reaches zero.
+- No toggle: the slider is the split.
+
+## Suggested quiz
 
 ```yaml
-goal: { counter: errors, below: 5 }
-hint: Move the share in small steps and watch the error counter between runs.
-why: A rollout is safe only while the new version's error rate stays inside its budget.
+question: The new version starts failing. What is the fastest safe action?
+options:
+  - Restart the old version
+  - Set the new share back to zero and roll back
+  - Wait for the next deploy
+answer: Set the new share back to zero and roll back
+why: Moving traffic off the failing version restores service without touching the healthy one.
 ```
 
-Quiz variant: "The new version starts failing. What is the fastest safe action?" Answer: set the share back to zero and roll back, not restart the old version.
+Challenge variant: move the share in small steps and keep the old version warm
+until the new one has served enough traffic.

@@ -23,16 +23,43 @@ else
   fail "SKILL.md exists"
 fi
 
-# (b) Eleven references, eight patterns, one template.
+# (a2) SKILL.md names the config, the profile guides, and the routing skill.
+if grep -q 'learn-with-me\.config\.json' "$SKILL/SKILL.md"; then
+  pass "SKILL.md names learn-with-me.config.json"
+else
+  fail "SKILL.md names learn-with-me.config.json"
+fi
+if grep -q 'references/profiles/' "$SKILL/SKILL.md"; then
+  pass "SKILL.md names references/profiles/"
+else
+  fail "SKILL.md names references/profiles/"
+fi
+if grep -q 'threejs-web' "$SKILL/SKILL.md"; then
+  pass "SKILL.md names threejs-web"
+else
+  fail "SKILL.md names threejs-web"
+fi
+
+# (b) Twelve references, two profile guides, eight patterns, one template.
 missing=""
 for name in subagent-briefs content-shape explaining diagrams code-skeleton visual-system \
-  interactive icons gamification safety publishing; do
+  interactive icons gamification safety publishing stage-authoring; do
   [ -f "$SKILL/references/$name.md" ] || missing="$missing $name.md"
 done
 if [ -z "$missing" ]; then
-  pass "11 references exist"
+  pass "12 references exist"
 else
-  fail "11 references exist (missing:$missing)"
+  fail "12 references exist (missing:$missing)"
+fi
+
+missing=""
+for name in plain-and-technical engineer; do
+  [ -f "$SKILL/references/profiles/$name.md" ] || missing="$missing $name.md"
+done
+if [ -z "$missing" ]; then
+  pass "profile guides exist"
+else
+  fail "profile guides exist (missing:$missing)"
 fi
 
 missing=""
@@ -46,8 +73,24 @@ else
   fail "8 patterns exist (missing:$missing)"
 fi
 
+missing=""
+for file in "$SKILL"/references/patterns/*.md; do
+  grep -q '^## Metaphors$' "$file" || missing="$missing $(basename "$file")"
+done
+if [ -z "$missing" ]; then
+  pass "every pattern has a Metaphors section"
+else
+  fail "every pattern has a Metaphors section (missing:$missing)"
+fi
+
 if [ -f "$TEMPLATE" ]; then
   pass "templates/lesson.md exists"
+  if grep -q 'trigger:' "$TEMPLATE" && grep -q 'toggle:' "$TEMPLATE" &&
+    grep -q 'slider:' "$TEMPLATE"; then
+    pass "template scene has a trigger, a toggle, and a slider"
+  else
+    fail "template scene has a trigger, a toggle, and a slider"
+  fi
 else
   fail "templates/lesson.md exists"
 fi
@@ -90,10 +133,25 @@ if [ "$hub_ok" -eq 1 ] && [ -f "$TEMPLATE" ]; then
     mkdir -p "$tmp_root/$repo_key/$slug"
     cp "$TEMPLATE" "$tmp_root/$repo_key/$slug/lesson.md"
 
+    # An allowed stage.mjs next to the template exercises lint rule 16.
+    cat >"$tmp_root/$repo_key/$slug/stage.mjs" <<'STAGE'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { THREE } from '@lwm/stage';
+
+export default function marker(api) {
+  const mesh = new THREE.Mesh(
+    new RoundedBoxGeometry(0.8, 0.8, 0.8, 2, 0.1),
+    new THREE.MeshBasicMaterial({ color: 0x000000 }),
+  );
+  api.scene.add(mesh);
+  return () => api.scene.remove(mesh);
+}
+STAGE
+
     if out=$(node "$HUB/scripts/lint.mjs" "$tmp_root" 2>&1); then
-      pass "template passes hub lint"
+      pass "template passes hub lint (rules 1-17)"
     else
-      fail "template passes hub lint"
+      fail "template passes hub lint (rules 1-17)"
       printf '%s\n' "$out" | sed 's/^/  /'
     fi
 
