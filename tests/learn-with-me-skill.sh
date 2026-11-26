@@ -108,6 +108,21 @@ elif [ "$hub_ok" -eq 1 ]; then
   fail "template available for lint and scan"
 fi
 
+# (e) install.sh pins all three.js skills to one commit.
+THREEJS_PIN=84f9bcb4bea1f7a28d57fe7f0af78f7f9c3dc467
+missing=""
+grep -q "$THREEJS_PIN" "$ROOT/install.sh" || missing="$missing $THREEJS_PIN"
+for name in threejs-web threejs-scene threejs-geometry threejs-materials threejs-lighting \
+  threejs-animation threejs-interaction threejs-html threejs-accessibility threejs-performance \
+  threejs-testing threejs-debugging; do
+  grep -q -- "--skill $name" "$ROOT/install.sh" || missing="$missing $name"
+done
+if [ -z "$missing" ]; then
+  pass "threejs skills pinned in install.sh"
+else
+  fail "threejs skills pinned in install.sh (missing:$missing)"
+fi
+
 if [ "$FAIL" -eq 0 ]; then
   echo "ALL PASS"
 else

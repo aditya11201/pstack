@@ -31,6 +31,26 @@ npx -y skills add "$REPO" -g -a opencode --skill '*' -y
 step "Skill: grilling (mattpocock/skills)"
 npx -y skills add mattpocock/skills --skill grilling -g -a opencode -y
 
+step "three.js skills (cesartevisual/threejs-skills, pinned)"
+# Pinned to 84f9bcb4bea1f7a28d57fe7f0af78f7f9c3dc467: the repo has no release tags.
+TJS=$(mktemp -d)
+git clone -q https://github.com/cesartevisual/threejs-skills.git "$TJS"
+git -C "$TJS" checkout -q 84f9bcb4bea1f7a28d57fe7f0af78f7f9c3dc467
+npx -y skills add "$TJS" -g -a opencode -y \
+  --skill threejs-web \
+  --skill threejs-scene \
+  --skill threejs-geometry \
+  --skill threejs-materials \
+  --skill threejs-lighting \
+  --skill threejs-animation \
+  --skill threejs-interaction \
+  --skill threejs-html \
+  --skill threejs-accessibility \
+  --skill threejs-performance \
+  --skill threejs-testing \
+  --skill threejs-debugging
+rm -rf "$TJS"
+
 step "Agent and command"
 mkdir -p "$CONFIG/agents" "$CONFIG/commands"
 cp "$REPO/agents/pstack-engineer.md" "$CONFIG/agents/"
