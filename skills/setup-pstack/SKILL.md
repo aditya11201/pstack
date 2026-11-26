@@ -9,6 +9,7 @@ Write pstack's model settings, one model per role:
 
 - **Cursor:** `~/.cursor/rules/pstack-models.mdc`, an always-applied rule.
 - **Claude Code:** `~/.claude/rules/pstack-models.md`. Claude Code loads every file in `~/.claude/rules/` into each new session.
+- **Antigravity:** `~/.agents/pstack-models.antigravity.md`. Antigravity doesn't load it on its own; the pstack plugin's rules tell skills to read it. Keep `~/.agents/pstack-models.md` untouched there, since it belongs to OpenCode.
 - **Every other harness** (Codex, Pi, OpenCode, and others): `~/.agents/pstack-models.md`. These harnesses don't load it on their own, so pstack skills read this file when they pick a model.
 
 "The settings file" below means the file for your harness. In Claude Code, if that file is missing, read `~/.agents/pstack-models.md` instead, where older versions of this skill wrote it.
@@ -17,7 +18,7 @@ Write pstack's model settings, one model per role:
 
 ### 1. Detect available models
 
-Enumerate the model slugs you can pass to a subagent in this session (Cursor `Task`, Claude Code `Agent`, OpenCode `task`, Codex `spawn_agent`). That is the dependable source. If your harness also has a command that lists the user's models, prefer it for completeness (for example `opencode models` or `pi --list-models`). If you cannot detect any, ask the user to paste the slugs they have access to. Never write a real slug you have not confirmed is available. The aliases `inherit-parent` and `auto` are always valid even though they are not detected slugs.
+Enumerate the model slugs you can pass to a subagent in this session (Cursor `Task`, Claude Code `Agent`, OpenCode `task`, Codex `spawn_agent`). That is the dependable source. If your harness also has a command that lists the user's models, prefer it for completeness (for example `opencode models`, `agy models`, or `pi --list-models`). If you cannot detect any, ask the user to paste the slugs they have access to. Never write a real slug you have not confirmed is available. The aliases `inherit-parent` and `auto` are always valid even though they are not detected slugs.
 
 ### 2. Load current state
 
@@ -35,7 +36,7 @@ Every other value is the user's choice and stays, including an old slug in any o
 
 ### 3. Budget, map, and confirm
 
-**(a) Ask for a budget.** Prefer your structured-question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code, `question` in OpenCode) over free text. Offer these three options with these exact labels, and name the current budget when the rule records one. With no rule, say that `large` matches the skill defaults.
+**(a) Ask for a budget.** Prefer your structured-question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code, `question` in OpenCode, `ask_question` in Antigravity) over free text. Offer these three options with these exact labels, and name the current budget when the rule records one. With no rule, say that `large` matches the skill defaults.
 
 - `large — xhigh reasoning`
 - `medium — high reasoning`
@@ -75,7 +76,7 @@ interrogate reviewers: claude-fable-5-2-high, claude-opus-5-5-high-fast, gemini-
 
 ### 6. Confirm
 
-Tell the user which file was written. In Cursor and Claude Code, it applies to new sessions. In other harnesses, pstack skills read `~/.agents/pstack-models.md` when they pick a model. Re-running this skill updates it.
+Tell the user which file was written. In Cursor and Claude Code, it applies to new sessions. In Antigravity, pstack skills read `~/.agents/pstack-models.antigravity.md`; in other harnesses, `~/.agents/pstack-models.md`, when they pick a model. Re-running this skill updates it.
 
 ### 7. Offer a verification skill (optional)
 

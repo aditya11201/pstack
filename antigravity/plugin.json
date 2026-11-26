@@ -1,0 +1,6 @@
+{
+  "name": "pstack",
+  "displayName": "pstack workflow",
+  "version": "0.15.46",
+  "description": "pstack with this fork's spec, plan, test-first, evidence and checkpoint workflow, the same as the OpenCode pstack-engineer agent."
+}

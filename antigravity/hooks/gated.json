@@ -1,0 +1,14 @@
+[
+  "git commit",
+  "git rebase",
+  "git push",
+  "gh pr create",
+  "gh pr merge",
+  "glab mr create",
+  "glab mr merge",
+  "helm install",
+  "helm upgrade",
+  "kubectl apply",
+  "terraform apply",
+  "terraform destroy"
+]

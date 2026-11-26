@@ -59,4 +59,16 @@ grep -q 'kept systematic-debugging: installed from' "$H/out.log" && [ -d "$H/.ag
 if run_install "$H" "$R" --remove-old-skills; then pass "D: rerun exit 0"; else fail "D: rerun failed"; fi
 grep -q '^removed' "$H/out.log" && fail "D: rerun removed something" || pass "D: rerun removed nothing"
 
+# E: --target opencode installs the same files as install.sh before --target existed (59482f1),
+# and writes nothing for Antigravity.
+files() { (cd "$1" && find .config/opencode .agents -type f ! -name .skill-lock.json ! -name '*.pyc' | sort); }
+H1=$WORK/e-old; H2=$WORK/e-new; RO=$WORK/repo-old; mkdir -p "$H1" "$H2" "$RO"
+(cd "$SRC" && git archive 59482f1) | tar -x -C "$RO"
+run_install "$H1" "$RO" || fail "E: old install failed"
+run_install "$H2" "$WORK/repo-a" --target opencode || fail "E: new install failed"
+files "$H1" >"$WORK/e-old.txt"; files "$H2" >"$WORK/e-new.txt"
+if cmp -s "$WORK/e-old.txt" "$WORK/e-new.txt"; then pass "E: same OpenCode files"; else
+  fail "E: OpenCode files differ"; diff "$WORK/e-old.txt" "$WORK/e-new.txt" || true; fi
+[ -e "$H2/.gemini" ] && fail "E: wrote .gemini" || pass "E: no .gemini"
+
 if [ "$FAIL" = 0 ]; then rm -rf "$WORK"; echo "ALL PASS"; else echo "logs kept in $WORK"; exit 1; fi

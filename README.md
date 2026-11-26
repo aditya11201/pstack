@@ -45,6 +45,18 @@ npx skills add backnotprop/pstack
 
 The CLI shows every skill in a list you can search. Select the skills you want, then select your agents.
 
+### This fork's workflow in OpenCode and Antigravity
+
+`./install.sh` installs the fork's workflow, with the same routing, spec and plan gates, checkpoints, and authorization contract in both harnesses:
+
+```bash
+./install.sh                        # OpenCode and Antigravity
+./install.sh --target opencode      # OpenCode 2 only: pstack-engineer agent, commands, checkpoint plugin
+./install.sh --target antigravity   # Antigravity only (offline): ~/.gemini/config/plugins/pstack
+```
+
+In Antigravity the plugin's rules are on in every workspace. Turn them off with `agy plugin disable pstack` or on the plugin page, and run `/setup-pstack` there to pick models. See [docs/harness/opencode.md](docs/harness/opencode.md) and [docs/harness/antigravity.md](docs/harness/antigravity.md).
+
 ## Skills
 
 Cursor's original README is [further down this page](#pstack).
