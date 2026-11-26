@@ -122,5 +122,35 @@ class GatedList(TmpRepo):
         self.assertIn("antigravity/hooks/gated.json", result.stderr)
 
 
+def role_lines(path):
+    lines = [l for l in path.read_text().splitlines() if l.strip() and not l.startswith("#")]
+    return [tuple(part.strip() for part in l.split(":", 1)) for l in lines]
+
+
+class HooksAndModels(unittest.TestCase):
+    def test_hooks_json(self):
+        hooks = json.loads((REPO / "antigravity/hooks.json").read_text())
+        self.assertEqual(set(hooks), {"pstack-checkpoint", "pstack-gate"})
+        checkpoint = hooks["pstack-checkpoint"]
+        for event in ["SessionStart", "PreInvocation"]:
+            handlers = checkpoint[event]
+            self.assertEqual([h["command"] for h in handlers], ["node ./hooks/checkpoint_context.mjs"])
+            self.assertTrue(all(h["timeout"] == 10 for h in handlers))
+        group = hooks["pstack-gate"]["PreToolUse"][0]
+        self.assertEqual(group["matcher"], "run_command")
+        self.assertEqual([h["command"] for h in group["hooks"]], ["node ./hooks/git_gate.mjs"])
+        self.assertTrue(all(h["timeout"] == 10 for h in group["hooks"]))
+
+    def test_models_template(self):
+        opencode = role_lines(REPO / "examples/pstack-models.md")
+        antigravity = role_lines(REPO / "examples/pstack-models.antigravity.md")
+        self.assertEqual([k for k, _ in antigravity], [k for k, _ in opencode])
+        for key, value in antigravity:
+            if key == "orca workers":
+                self.assertEqual(value, dict(opencode)["orca workers"])
+            else:
+                self.assertEqual(value, "inherit-parent", key)
+
+
 if __name__ == "__main__":
     unittest.main()
