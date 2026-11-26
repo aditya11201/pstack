@@ -152,5 +152,18 @@ class HooksAndModels(unittest.TestCase):
                 self.assertEqual(value, "inherit-parent", key)
 
 
+class SettingsFileLines(unittest.TestCase):
+    def test_settings_file_lines(self):
+        missing = []
+        for path in sorted((REPO / "skills").glob("*/SKILL.md")):
+            text = path.read_text()
+            if "~/.agents/pstack-models.md" not in text:
+                continue
+            if "~/.agents/pstack-models.antigravity.md" not in text or "Antigravity" not in text:
+                missing.append(str(path.relative_to(REPO)))
+        self.assertEqual(missing, [])
+        self.assertIn("agy models", (REPO / "skills/setup-pstack/SKILL.md").read_text())
+
+
 if __name__ == "__main__":
     unittest.main()
