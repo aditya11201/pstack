@@ -1,6 +1,7 @@
 // pstack-gate: Antigravity PreToolUse hook for run_command.
 // Asks before the commands examples/opencode.jsonc gates in OpenCode (list in gated.json).
-// Fails closed: anything it cannot read gets "ask".
+// Fails closed: anything it cannot read gets "ask". A command it does not cover gets no
+// output at all, because Antigravity reads a PreToolUse result without "decision" as a deny.
 import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -32,7 +33,7 @@ export function decide(stdin, gated) {
   const commandLine = input?.toolCall?.args?.CommandLine
   if (typeof commandLine !== "string") return ask("no command line found; approve manually")
   const match = classify(commandLine, gated)
-  return match ? ask(match.rule + " needs approval") : {}
+  return match ? ask(match.rule + " needs approval") : null
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -44,5 +45,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.stderr.write(String(error) + "\n")
     out = ask("hook error; approve manually")
   }
-  process.stdout.write(JSON.stringify(out) + "\n")
+  if (out) process.stdout.write(JSON.stringify(out) + "\n")
 }

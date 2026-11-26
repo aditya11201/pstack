@@ -16,7 +16,7 @@ Checked on 2026-11-26 against `agy` 1.5.17. The sources are the built-in `agy-cu
 | Hooks | `<plugin>/hooks.json` at the plugin root. Handlers get JSON on stdin and write JSON on stdout. They run in the plugin dir with `PLUGIN_ROOT` and `PLUGIN_DATA` set. | `docs/hooks.md` |
 | Hook events | `SessionStart`, `PreToolUse`, `PostToolUse`, `PreInvocation`, `PostInvocation`, `Stop`. There is **no compaction hook**. | `docs/hooks.md` |
 | Context injection | `{"injectSteps":[{"systemMessage":{"systemMessage":"…"}}]}`. It persists in the conversation, so it is injected only when it changes. | `docs/hooks.md` |
-| Tool gate | `PreToolUse` returns `{"decision":"ask"}` | `docs/hooks.md` |
+| Tool gate | `PreToolUse` returns `{"decision":"ask"}`. A result without `decision`, such as `{}`, is read as a deny with an empty reason, so a command the gate doesn't cover must get **no output**. | `docs/hooks.md`; reproduced 2026-11-26 (`{}` → "tool call denied by pre-tool hook: ", empty stdout → the command ran) |
 | Slash commands | Every skill is also `/<name>` | builtin `migrate-workflows` skill |
 | Plugin toggle | `agy plugin enable|disable <dir>`, or the plugin page | builtin `plugin` skill |
 | Model list | `agy models` | `agy --help` |

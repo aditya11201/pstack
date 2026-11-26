@@ -9,11 +9,14 @@ import { classify } from "./git_gate.mjs"
 const here = dirname(fileURLToPath(import.meta.url))
 const gated = JSON.parse(readFileSync(join(here, "gated.json"), "utf8"))
 
-function hook(stdin) {
+// Antigravity treats a PreToolUse output without "decision" (such as {}) as a deny,
+// so a command the gate does not cover must produce no output at all.
+function raw(stdin) {
   const out = spawnSync(process.execPath, [join(here, "git_gate.mjs")], { input: stdin, encoding: "utf8" })
   assert.equal(out.status, 0, out.stderr)
-  return JSON.parse(out.stdout)
+  return out.stdout
 }
+const hook = (stdin) => JSON.parse(raw(stdin))
 
 const call = (cmd) => JSON.stringify({ hookEventName: "PreToolUse", toolCall: { name: "run_command", args: { CommandLine: cmd } } })
 
@@ -34,8 +37,8 @@ for (const cmd of [
 }
 
 for (const cmd of ["ls", "git status", "git log", "helm lint .", "git commitizen", "echo git push"]) {
-  test(`allows: ${cmd}`, () => {
-    assert.deepEqual(hook(call(cmd)), {})
+  test(`stays silent for: ${cmd}`, () => {
+    assert.equal(raw(call(cmd)), "")
   })
 }
 
