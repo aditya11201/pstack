@@ -51,7 +51,11 @@ This adds an execution ledger alongside `show-me-your-work`'s decision TSV. Comm
 
 Work inline unless the user explicitly requests delegation. If the user requests Orca workers or asks to split code changes across agents, worktrees, or branches, load `orchestration` and follow its Orca dispatch and result loop. Do not silently substitute native subagents if Orca dispatch fails.
 
-pstack still owns the playbook and acceptance criteria. Give each worker a self-contained brief with the goal, phase, isolated write scope, relevant method, behavior to preserve, and required checks. For Orca, pass a model override only if the user names a model for that dispatch; the pstack model mapping does not configure Orca workers. For native delegation, inherit the parent model if no validated mapping or model override is available. Verify actual worker models before claiming cross-model review.
+pstack still owns the playbook and acceptance criteria. Give each worker a self-contained brief with the goal, phase, isolated write scope, relevant method, behavior to preserve, and required checks.
+
+Every Orca worker runs on an explicit model, chosen in this order: a model the user names for that dispatch, then a worker model the approved spec or plan names, then the `orca workers` line in `~/.agents/pstack-models.md`. A named model is a requirement even when it says "if available". Resolve a human name such as "Luna 6" to the exact slug in `opencode models`. This overrides the Orca guide's "add `--model` only if the user named one". Start every Orca worker with `python3 "$HOME/.agents/skills/execution-checkpoint/scripts/orca_worker_start.py" [--model <slug>] -- <worker-start args>`, never with a bare `worker-start`. The script checks availability, passes `--model`, reads back the launched model, and stops a worker that runs on anything else. Exit 3 means no requested model is available: stop and ask the user, never fall back to the parent model. Exit 4 means a wrong launch: record a checkpoint blocker and a decision naming the required model before any other dispatch. Brief workers to report the model they ran on.
+
+For native delegation, inherit the parent model if no validated mapping or model override is available. Verify actual worker models before claiming cross-model review.
 
 For Orca, wait for its result notification rather than polling. The parent decides completion from the artifact, commands, and results, not the worker's status alone.
 

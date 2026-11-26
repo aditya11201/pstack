@@ -20,9 +20,11 @@ A claim of success is a claim about output you have seen. If you have not run th
    | Deployed or applied | The live state, read back. Example: `gcloud … describe`, `kubectl get`, the job status. |
    | Requirements met | Each requirement in the spec or plan, checked one by one. |
    | Worker finished | The diff or artifact the worker produced, inspected. The worker's own report does not count. |
+   | Worker ran on the required model | The launched model read back from Orca (`worker-show`), equal to the model required. |
 2. **Run it now,** on the current revision or diff. Evidence from before your last edit is stale.
 3. **Read the whole output.** Check the exit code, the failure count, and any warnings.
 4. **Report what the output shows.** If it shows success, state it plainly and quote the key line. If it does not, report the actual status.
+5. **A missed requirement is a failure.** Evidence that an explicit requirement from the user, spec, or plan was not met, such as "requested X, got Y", fails the claim even when everything else succeeded. Report it as failed or blocked, never as done.
 
 ## Reuse and limits
 
