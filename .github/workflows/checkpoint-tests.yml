@@ -8,6 +8,13 @@ on:
       - "install.sh"
       - "tests/**"
       - "examples/opencode2/**"
+      - "examples/opencode.jsonc"
+      - "examples/pstack-models*.md"
+      - "scripts/**"
+      - "agents/**"
+      - "adapters/**"
+      - "antigravity/**"
+      - "skills/*/SKILL.md"
   workflow_dispatch:
 
 permissions:
@@ -29,6 +36,10 @@ jobs:
           sh -n install.sh
           python -m py_compile skills/execution-checkpoint/scripts/checkpoint.py
           python -m unittest discover -s skills/execution-checkpoint/tests -v
+      - name: Generated agent files and Antigravity plugin
+        run: |
+          python scripts/build_agents.py --check
+          python -m unittest tests/test_build_agents.py -v
 
   opencode2-plugin:
     runs-on: ubuntu-latest
@@ -39,6 +50,10 @@ jobs:
           node-version: "22"
       - name: Verify V2 plugin lifecycle and isolation
         run: node --test examples/opencode2/pstack-execution-checkpoint.test.mjs
+      - name: Antigravity hooks
+        run: node --test 'antigravity/hooks/*.test.mjs'
+      - name: Antigravity install
+        run: sh tests/install-antigravity.sh "$PWD"
 
   install-migration:
     runs-on: ubuntu-latest
