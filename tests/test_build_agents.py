@@ -72,5 +72,36 @@ class BuildAgents(TmpRepo):
             self.assertNotIn(word, core)
 
 
+def frontmatter(text):
+    match = re.match(r"---\n(.*?)\n---\n", text, re.S)
+    if not match:
+        return {}
+    return dict(line.split(": ", 1) for line in match.group(1).splitlines() if ": " in line)
+
+
+class PluginManifest(TmpRepo):
+    def test_plugin_manifest(self):
+        manifest = json.loads((REPO / "antigravity/plugin.json").read_text())
+        self.assertEqual(set(manifest), {"name", "displayName", "version", "description"})
+        self.assertEqual(manifest["name"], "pstack")
+        root_version = json.loads((REPO / "plugin.json").read_text())["version"]
+        self.assertEqual(manifest["version"], root_version)
+        for name in ["plan-review", "execution-resume"]:
+            text = (REPO / "antigravity/skills" / name / "SKILL.md").read_text()
+            meta = frontmatter(text)
+            self.assertEqual(meta.get("name"), name)
+            self.assertTrue(meta.get("description"))
+            self.assertNotIn("$ARGUMENTS", text)
+
+    def test_version_drift_detected(self):
+        path = self.tmp / "antigravity/plugin.json"
+        data = json.loads(path.read_text())
+        data["version"] = "0.0.0"
+        path.write_text(json.dumps(data))
+        result = run_build(self.tmp, "--check")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("version", result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

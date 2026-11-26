@@ -5,6 +5,7 @@
   python3 scripts/build_agents.py --check   # exit 1 if an output is stale
 """
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -34,11 +35,18 @@ def build(root):
     }
 
 
-def problems(outputs):
+def problems(root, outputs):
+    errors = []
     size = len(outputs["antigravity/rules/AGENTS.md"].encode())
     if size >= RULES_CAP:
-        return ["antigravity/rules/AGENTS.md is %d bytes; Antigravity truncates rules at %d" % (size, RULES_CAP)]
-    return []
+        errors.append("antigravity/rules/AGENTS.md is %d bytes; Antigravity truncates rules at %d" % (size, RULES_CAP))
+    manifest = root / "antigravity/plugin.json"
+    if manifest.exists():
+        want = json.loads((root / "plugin.json").read_text())["version"]
+        have = json.loads(manifest.read_text()).get("version")
+        if have != want:
+            errors.append("antigravity/plugin.json version %s differs from plugin.json version %s" % (have, want))
+    return errors
 
 
 def main():
@@ -48,7 +56,7 @@ def main():
     args = parser.parse_args()
     root = Path(args.root)
     outputs = build(root)
-    errors = problems(outputs)
+    errors = problems(root, outputs)
     if args.check:
         for rel, text in outputs.items():
             path = root / rel
