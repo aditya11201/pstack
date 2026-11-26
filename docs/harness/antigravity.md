@@ -34,3 +34,28 @@ Checked on 2026-11-26 against `agy` 1.5.17. The sources are the built-in `agy-cu
 | Background tasks | — | `manage_task` |
 
 Source: `agy -p --mode plan` in a scratch repo, 2026-11-26. The CLI listed `read_file`, `write_file`, `edit_file`, `run_command`, `manage_task`, `update_steps`, `send_message`, `schedule`, `invoke_subagent`, `define_subagent`, `manage_subagents`, `search_web`, `run_workflow`, `swarm`, `ask_question`, `call_mcp_tool`, `list_resources`, and `read_resource`. It also said that skills are loaded by reading their `SKILL.md`.
+
+## Install
+
+```sh
+./install.sh --target antigravity   # or --target all for OpenCode too
+```
+
+The installer runs `scripts/build_agents.py --check` first and stops if the generated files are stale. Then it does three things:
+
+- copies `antigravity/` to `~/.gemini/config/plugins/pstack/`, adds `examples/opencode2/pstack-execution-checkpoint.js` to its `hooks/`, and marks the folder with `.pstack-installed`;
+- adds `~/.agents/skills` to `~/.gemini/config/skills.json` if it isn't listed yet;
+- installs `~/.agents/pstack-models.antigravity.md` if it doesn't exist yet.
+
+It never edits `~/.gemini/config/config.json` or `~/.gemini/config/hooks.json`. If a `plugins/pstack` folder exists without the marker, it is left as it is.
+
+## What the plugin does
+
+- `rules/AGENTS.md`: the core workflow plus the Antigravity harness section. It is generated, so edit `agents/core/` or `adapters/antigravity.md` and run `python3 scripts/build_agents.py`.
+- `pstack-checkpoint` hook: on `SessionStart`, and on `PreInvocation` when the state changed, it injects the same read-only checkpoint summary the OpenCode plugin does. It fails open.
+- `pstack-gate` hook: asks before the commands that `examples/opencode.jsonc` gates in OpenCode (`hooks/gated.json`, generated). It fails closed.
+- `/plan-review` and `/execution-resume`: the OpenCode commands, as skills.
+
+## Turn it off or remove it
+
+`agy plugin disable pstack` turns the workflow off in every Antigravity workspace. Deleting `~/.gemini/config/plugins/pstack` uninstalls it. The `~/.agents/skills` entry in `skills.json` stays, because other skills use it too.

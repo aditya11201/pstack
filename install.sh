@@ -1,29 +1,45 @@
 #!/bin/sh
-# Install the pstack + OpenCode workflow for the current user.
+# Install the pstack workflow for OpenCode, Antigravity, or both.
 # Safe to rerun: files are overwritten with the repo version, config is merged.
 #
-#   ./install.sh            # everything
+#   ./install.sh            # everything, for OpenCode and Antigravity
+#   ./install.sh --target opencode|antigravity|all
 #   ./install.sh --no-rtk   # skip the RTK plugin and rules
 #   ./install.sh --remove-old-skills
 #                           # also remove skill copies this repo installed under
 #                           # their old names (they are listed on every run)
 #
-# Prerequisites: node/npx, python3, opencode. Optional: rtk binary, Orca app.
+# Prerequisites: node/npx, python3, opencode. Optional: agy (Antigravity), rtk binary,
+# Orca app. --target antigravity makes no network calls.
 set -eu
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+GEMINI_CONFIG="${GEMINI_CONFIG:-$HOME/.gemini/config}"
 WITH_RTK=1
 REMOVE_OLD=0
-for arg in "$@"; do
-  case "$arg" in
+TARGET=all
+while [ $# -gt 0 ]; do
+  case "$1" in
     --no-rtk) WITH_RTK=0 ;;
     --remove-old-skills) REMOVE_OLD=1 ;;
-    *) echo "unknown option: $arg" >&2; exit 2 ;;
+    --target) shift; TARGET=${1:-} ;;
+    --target=*) TARGET=${1#--target=} ;;
+    *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
+  shift
 done
+case "$TARGET" in
+  opencode|antigravity|all) ;;
+  *) echo "unknown target: $TARGET (use opencode, antigravity, or all)" >&2; exit 2 ;;
+esac
 
 step() { printf '\n==> %s\n' "$1"; }
+
+step "Generated agent files are current"
+python3 "$REPO/scripts/build_agents.py" --check
+
+install_opencode() {
 
 step "Skills: pstack, method skills, plan-gap-interview (from this repo)"
 npx -y skills add "$REPO" -g -a opencode --skill '*' -y
@@ -123,11 +139,69 @@ if [ "$WITH_RTK" = 1 ]; then
   grep -qx '@RTK.md' "$HOME/.claude/CLAUDE.md" || printf '@RTK.md\n' >> "$HOME/.claude/CLAUDE.md"
   command -v rtk >/dev/null 2>&1 || echo "warning: rtk binary not found; install it from https://github.com/rtk-ai/rtk"
 fi
+}
+
+install_antigravity() {
+step "Antigravity plugin"
+PLUGIN="$GEMINI_CONFIG/plugins/pstack"
+if [ -e "$PLUGIN" ] && [ ! -e "$PLUGIN/.pstack-installed" ]; then
+  echo "warning: $PLUGIN was not installed by this repo; kept unchanged"
+else
+  mkdir -p "$PLUGIN"
+  cp -R "$REPO/antigravity/." "$PLUGIN/"
+  rm -f "$PLUGIN"/hooks/*.test.mjs
+  cp "$REPO/examples/opencode2/pstack-execution-checkpoint.js" "$PLUGIN/hooks/"
+  touch "$PLUGIN/.pstack-installed"
+  echo "installed $PLUGIN"
+fi
+
+step "Skill root in $GEMINI_CONFIG/skills.json"
+python3 - "$GEMINI_CONFIG/skills.json" <<'PY'
+import json, sys
+from pathlib import Path
+target = Path(sys.argv[1])
+data = json.loads(target.read_text()) if target.exists() else {}
+entries = data.setdefault("entries", [])
+if any(e.get("path") == "~/.agents/skills" for e in entries):
+    print("~/.agents/skills already listed")
+else:
+    entries.append({"path": "~/.agents/skills"})
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(data, indent=2) + "\n")
+    print("added ~/.agents/skills")
+PY
+[ -e "$HOME/.agents/skills/spec-first/SKILL.md" ] || echo "warning: pstack skills not found in ~/.agents/skills; run ./install.sh --target opencode first"
+
+step "Antigravity model mapping (kept if it already exists)"
+mkdir -p "$HOME/.agents"
+if [ -e "$HOME/.agents/pstack-models.antigravity.md" ]; then
+  echo "kept existing ~/.agents/pstack-models.antigravity.md"
+else
+  cp "$REPO/examples/pstack-models.antigravity.md" "$HOME/.agents/pstack-models.antigravity.md"
+  echo "installed ~/.agents/pstack-models.antigravity.md; run /setup-pstack in Antigravity to fill it"
+fi
+command -v agy >/dev/null 2>&1 || echo "warning: agy not found on PATH; files are installed for when Antigravity is"
+}
+
+case "$TARGET" in
+  opencode) install_opencode ;;
+  antigravity) install_antigravity ;;
+  all) install_opencode; install_antigravity ;;
+esac
 
 step "Done"
+if [ "$TARGET" != antigravity ]; then
 cat <<'EOF'
-Per project: merge examples/opencode.jsonc into the project's opencode.jsonc
+OpenCode, per project: merge examples/opencode.jsonc into the project's opencode.jsonc
 (disables the Superpowers plugin there in case it is still installed, and gates
 commit/push/deploy commands).
 Then pick the pstack-engineer agent in OpenCode and a parent model in /models.
 EOF
+fi
+if [ "$TARGET" != opencode ]; then
+cat <<'EOF'
+Antigravity: the pstack plugin is on in every workspace from the next turn.
+Turn it off with `agy plugin disable pstack` or on its plugin page.
+Run /setup-pstack in Antigravity to choose models.
+EOF
+fi
