@@ -21,7 +21,7 @@ Enumerate the model slugs you can pass to a subagent in this session (Cursor `Ta
 
 ### 2. Load current state
 
-The default role-to-model mapping is the rule shape shown in step 5 below. If the settings file already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `hardest tasks`, `architect runners`, `reflect tooling`, or `why investigators`, is from a retired role. Drop it.
+The default role-to-model mapping is the rule shape shown in step 5 below. If the settings file already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `hardest tasks`, `architect runners`, `reflect tooling`, or `why investigators`, is from a retired role. Drop it. An `orca workers` line is not retired: it lists exact Orca launch model ids in fallback order, so keep it unchanged, apply no budget to it, and copy it into the file step 5 writes.
 
 Older defaults put another Gemini model, then `gemini-4-neon-high`, in the panel seat. So in any settings file, a `gemini-4-neon-high` entry, or a `gemini-4-*` entry other than `gemini-4-neon-*`, in a panel role (`arena runners`, `arena cross-judge pool`, `interrogate reviewers`) is an old default. Each one becomes `gemini-4-neon-xhigh`. A Gemini 4 Neon entry at any other level is the user's choice and stays. Tell the user which entries you replaced.
 

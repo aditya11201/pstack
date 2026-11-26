@@ -40,6 +40,7 @@ python3 "$CHECKPOINT" decision --repo . --run <id> --text "<decision>" --reason 
 ```
 
 - Evidence is the command you actually ran and the output you saw. The helper requires it to complete a step or task but does not run or check it; you do. A failed check is recorded as a failure or a blocker, never as complete.
+- Evidence that an explicit requirement of the step was not met (for example "requested model X, worker ran on Y") makes the step blocked, not complete. Record `block`, then a `decision` stating the requirement, such as `--text "Orca workers must run on openai/gpt-6-luna"`, before the next dispatch or step, so later work and `resume` read it first.
 - A task completes only when all its steps are complete and it has no open blocker; the helper enforces both.
 - When the user grants or revokes a permission, record it at once: `decision --text "AUTH: <action and scope>" --reason "user, <date>"`. A revocation starts with `AUTH revoked:`. Also update the spec's `## Authorizations` section.
 - If the plan changed, the helper refuses updates. Reconcile scope with `plan-gap-interview` (change mode) and get approval before continuing.

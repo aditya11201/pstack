@@ -10,3 +10,4 @@ arena runners: openai/gpt-6.1-terra#medium, alibaba-token-plan/deepseek-v4-pro#h
 arena cross-judge pool: alibaba-token-plan/qwen4-max-preview#medium, openai/gpt-6.1-terra#medium
 swarm workers: alibaba-token-plan/deepseek-v4.1-flash-1017#low
 interrogate reviewers: openai/gpt-6.1-terra#medium, alibaba-token-plan/deepseek-v4-pro#high
+orca workers: openai/gpt-6-luna, alibaba-token-plan/deepseek-v4.1-flash-1017
