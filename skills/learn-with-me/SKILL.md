@@ -46,11 +46,11 @@ Follow `references/code-skeleton.md`. Keep each skeleton at most 40 lines, elide
 
 ### 5. Write to the hub
 
-Work on branch `lesson/<repoKey>/<slug>` and commit locally. Never push.
+Work on branch `lesson/<repoKey>/<slug>` and commit locally. Never push. A new branch starts from the hub's `main`, never from the branch that is checked out.
 
 ```sh
 git -C "$HUB" switch "lesson/$repoKey/$slug" 2>/dev/null ||
-  git -C "$HUB" switch -c "lesson/$repoKey/$slug"
+  git -C "$HUB" switch -c "lesson/$repoKey/$slug" main
 mkdir -p "$HUB/content/$repoKey/$slug"
 ```
 

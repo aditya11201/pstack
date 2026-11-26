@@ -181,6 +181,13 @@ else
   fail "threejs skills pinned in install.sh (missing:$missing)"
 fi
 
+# A new lesson branch starts from the hub's main, never from the branch that is checked out.
+if grep -Fq 'switch -c "lesson/$repoKey/$slug" main' "$SKILL/SKILL.md"; then
+  pass "new lesson branch starts from main"
+else
+  fail "new lesson branch starts from main"
+fi
+
 if [ "$FAIL" -eq 0 ]; then
   echo "ALL PASS"
 else
