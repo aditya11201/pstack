@@ -1,6 +1,13 @@
 # Fan-out
 
-Use when one event reaches several consumers and each can fail or fall behind on its own.
+Use when one event reaches several consumers and each can fail or fall behind on
+its own.
+
+## Metaphors
+
+- One announcement on a noticeboard, read by each team when it is free.
+- A radio broadcast: every radio receives the same signal on its own schedule.
+- A photocopier that makes one copy for each desk.
 
 ## Roles
 
@@ -24,7 +31,8 @@ flowchart LR
   notify -->|5 send| sender[External sender]
 ```
 
-Two consumers are enough to show independence. Add a third only if the lesson explains a third behaviour.
+Two consumers are enough to show independence. Add a third only if the lesson
+explains a third behaviour.
 
 ## Scene
 
@@ -41,17 +49,24 @@ timeline:
   - when: notify-slow
     then:
       - state: { node: notify, to: queued }
-      - counter: { id: backlog, label: Notification backlog, sum: count }
+      - bubble: { on: notify, text: Backlog grows }
     else:
       - packet: { from: topic, to: notify, label: deliver }
       - packet: { from: notify, to: sender, label: send }
   - state: { node: orders, to: idle }
 narration:
   - at: 1
-    text: The producer publishes once; the channel copies the event to each consumer.
+    text: The producer publishes once; the channel delivers a copy to each consumer.
   - at: 4
     text: A slow consumer builds its own backlog without stopping the other.
 ```
+
+## What the reader controls
+
+- **Trigger:** publishes one event.
+- **Toggle:** makes the notification consumer slow, so it turns `queued` while
+  the orders consumer keeps working.
+- No slider: the lesson is about independence, not volume.
 
 ## Suggested quiz
 
@@ -65,4 +80,6 @@ answer: It keeps processing
 why: Each consumer reads independently, so one backlog does not block the other.
 ```
 
-The counter is also the challenge: keep the notification backlog below the budget while publishing.
+Challenge variant: keep the notification consumer out of `queued` while
+publishing. The reader leaves the toggle off, or explains why the backlog is
+still bounded.

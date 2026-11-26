@@ -1,6 +1,13 @@
 # Cache hit and miss
 
-Use when a fast store sits in front of a slower one and the reader should see both outcomes from one control.
+Use when a fast store sits in front of a slower one and the reader should see
+both outcomes from one control.
+
+## Metaphors
+
+- A desk drawer of recent answers next to the filing cabinet.
+- A fridge shelf in front of the shop: most orders never reach the storeroom.
+- A notepad by the phone with the numbers you call most.
 
 ## Roles
 
@@ -23,7 +30,8 @@ flowchart LR
   gateway -->|6 response| client
 ```
 
-Keep the cache branch as one node; the hit and miss paths are edges in the scene, not separate diagrams.
+Keep the cache branch as one node; the hit and miss paths are edges in the
+scene, not separate diagrams.
 
 ## Scene
 
@@ -41,9 +49,10 @@ timeline:
       - packet: { from: gateway, to: cache, label: lookup, ms: 20 }
       - packet: { from: cache, to: gateway, label: hit, ms: 20 }
     else:
-      - packet: { from: gateway, to: database, label: query, ms: 300 }
+      - packet: { from: cache, to: database, label: query, ms: 300 }
       - state: { node: database, to: busy }
       - packet: { from: database, to: gateway, label: rows, ms: 300 }
+  - gauge: { node: gateway, value: rps }
   - counter: { id: latency, label: Latency, sum: ms }
   - packet: { from: gateway, to: client, label: response }
 narration:
@@ -52,6 +61,13 @@ narration:
   - at: 4
     text: The toggle selects the branch, so the same request takes a different path.
 ```
+
+## What the reader controls
+
+- **Trigger:** sends one request.
+- **Toggle:** warms the cache, so the request skips the database.
+- **Slider:** raises the request rate and the gateway's load gauge; the latency
+  counter shows the cost of a cold cache.
 
 ## Suggested challenge
 

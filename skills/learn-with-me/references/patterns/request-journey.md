@@ -1,6 +1,13 @@
 # Request journey
 
-Use when one request crosses several components and the reader should see each hop and the return path.
+Use when one request crosses several components and the reader should see each
+hop and the return path.
+
+## Metaphors
+
+- A relay race: each runner carries the baton one leg and hands it on.
+- A parcel passed from counter to counter, each clerk adding a stamp.
+- A visitor signing in at each desk before reaching the room they need.
 
 ## Roles
 
@@ -23,7 +30,8 @@ flowchart LR
   gateway -->|6 response| client
 ```
 
-Add the return edges only in the step that explains the response. Earlier steps stop at the store.
+Add the return edges only in the step that explains the response. Earlier steps
+stop at the store.
 
 ## Scene
 
@@ -53,6 +61,13 @@ narration:
     text: The same path carries the response back.
 ```
 
+## What the reader controls
+
+- **Trigger:** sends one request down the path.
+- **Toggle:** makes the store slow, so the same hops take longer and the latency
+  counter grows.
+- No slider: the lesson is about the path, not the arrival rate.
+
 ## Suggested quiz
 
 ```yaml
@@ -65,4 +80,5 @@ answer: The service
 why: The store returns rows; the service owns the shape of the response.
 ```
 
-Use the hop count as the challenge variant: keep latency under a budget by leaving the slow toggle off.
+Use the hop count as the challenge variant: keep latency under a budget by
+leaving the slow toggle off.

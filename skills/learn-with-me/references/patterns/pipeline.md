@@ -2,6 +2,12 @@
 
 Use when work moves through ordered stages and each stage can stop the next one.
 
+## Metaphors
+
+- An assembly line with a quality checkpoint before the packing bay.
+- A kitchen pass: a dish is checked before it leaves for the room.
+- A relay with a gate: the next runner cannot start until the gate opens.
+
 ## Roles
 
 | Id | Role | Use |
@@ -22,19 +28,21 @@ flowchart LR
   cluster -->|4 start| service[Service]
 ```
 
-If the lesson needs a separate test node, add it between `ci` and `registry` and give it the `ci` role.
+If the lesson needs a separate test node, add it between `ci` and `registry` and
+give it the `ci` role.
 
 ## Stage
 
 ```yaml
 title: A change reaches the cluster
 stage:
-  grid: [12, 6]
+  grid: [14, 6]
   place:
     - { actor: author, at: [1, 3] }
     - { actor: ci, at: [4, 3] }
     - { actor: registry, at: [7, 3] }
     - { actor: cluster, at: [10, 3] }
+    - { actor: service, at: [13, 3] }
 controls:
   - trigger: Push commit
   - toggle: { id: tests-pass, label: Tests pass, default: true }
@@ -43,14 +51,14 @@ timeline:
   - state: { node: ci, to: busy }
   - when: tests-pass
     then:
-      - packet: { from: ci, to: registry, label: publish }
+      - packet: { from: ci, to: registry, label: publish, ms: 400 }
       - state: { node: registry, to: busy }
-      - packet: { from: registry, to: cluster, label: pull }
+      - packet: { from: registry, to: cluster, label: pull, ms: 200 }
       - state: { node: cluster, to: busy }
-      - bubble: { on: cluster, text: "Started" }
+      - bubble: { on: cluster, text: Started }
     else:
       - state: { node: ci, to: error }
-      - bubble: { on: ci, text: "Checks failed" }
+      - bubble: { on: ci, text: Checks failed }
   - counter: { id: duration, label: Pipeline time, sum: ms }
 narration:
   - at: 1
@@ -58,6 +66,13 @@ narration:
   - at: 5
     text: Only a passing artifact is published, pulled, and started.
 ```
+
+## What the reader controls
+
+- **Trigger:** pushes one change into the pipeline.
+- **Toggle:** makes the tests fail, so the pipeline stops at the runner and
+  never reaches the registry.
+- No slider: the lesson is about the gate, not the rate.
 
 ## Suggested quiz
 
@@ -71,4 +86,5 @@ answer: Before the artifact is published
 why: Publishing a bad artifact lets other stages consume it, so the gate belongs before the registry.
 ```
 
-Order variant: push, build, test, publish, pull, start. Use `pipeline` when the reader must remember the gate, not the components.
+Order variant: push, build, test, publish, pull, start. Use `pipeline` when the
+reader must remember the gate, not the components.
